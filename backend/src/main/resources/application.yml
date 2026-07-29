@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: medistock
+
+  datasource:
+    url: jdbc:h2:mem:medistock;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    open-in-view: false
+  sql:
+    init:
+      mode: never
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-app-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+  
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: your-google-client-id
+            client-secret: your-google-client-secret
+            scope:
+              - email
+              - profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# JWT Configuration
+jwt:
+  secret: MediStockSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLongForHS256AlgorithmSecurity
+  access-token-expiration: 900000    # 15 minutes in milliseconds
+  refresh-token-expiration: 604800000 # 7 days in milliseconds
+  issuer: medistock
+  audience: medistock-users
+
+# Application Configuration
+app:
+  security:
+    cors:
+      allowed-origins: http://localhost:5173,http://localhost:5174,http://localhost:3000
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+      allowed-headers: "*"
+      exposed-headers: Authorization
+      allow-credentials: true
+      max-age: 3600
+    
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: true
+    
+    email-verification:
+      enabled: false
+      token-expiration: 86400000 # 24 hours
+    
+    password-reset:
+      token-expiration: 1800000 # 30 minutes
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: false
+
+# Logging Configuration
+logging:
+  level:
+    com.medistock: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/medistock.log
