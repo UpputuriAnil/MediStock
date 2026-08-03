@@ -169,11 +169,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
                         <div
                           key={n.id}
                           onClick={() => markAsRead(n.id)}
-                          className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${
-                            n.read
+                          className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${n.read
                               ? 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/80 text-slate-500'
                               : 'bg-primary-50/50 dark:bg-primary-950/40 border-primary-100 dark:border-primary-900 text-slate-800 dark:text-slate-200 font-medium'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between font-bold mb-1">
                             <span className="flex items-center gap-1.5">
@@ -212,9 +211,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
 
           {/* Role Badge */}
           <div className="hidden lg:block">
-            <Badge variant="primary" dot>
+            <Badge
+              variant={
+                user?.role?.toLowerCase().includes('admin')
+                  ? 'purple'
+                  : user?.role?.toLowerCase().includes('staff')
+                    ? 'primary'
+                    : 'emerald'
+              }
+              dot
+            >
               <ShieldCheck className="w-3 h-3 mr-1 inline" />
-              {user?.role || 'Pharmacist'}
+              {user?.role?.toLowerCase().includes('admin')
+                ? 'Admin'
+                : user?.role?.toLowerCase().includes('staff')
+                  ? 'Staff'
+                  : 'Pharmacist'}
             </Badge>
           </div>
 

@@ -1,32 +1,38 @@
 package com.medistock.config;
 
-import com.medistock.entity.Permission;
-import com.medistock.entity.Role;
-import com.medistock.entity.User;
-import com.medistock.repository.PermissionRepository;
-import com.medistock.repository.RoleRepository;
-import com.medistock.repository.UserRepository;
+import com.medistock.entity.*;
+import com.medistock.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-//@Component
+@Component
 public class DataLoader implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final SupplierRepository supplierRepository;
+    private final MedicineRepository medicineRepository;
+    private final InventoryRepository inventoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataLoader(UserRepository userRepository, RoleRepository roleRepository,
-                      PermissionRepository permissionRepository, PasswordEncoder passwordEncoder) {
+                      PermissionRepository permissionRepository, SupplierRepository supplierRepository,
+                      MedicineRepository medicineRepository, InventoryRepository inventoryRepository,
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+        this.supplierRepository = supplierRepository;
+        this.medicineRepository = medicineRepository;
+        this.inventoryRepository = inventoryRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -74,11 +80,30 @@ public class DataLoader implements CommandLineRunner {
                 getPermissionsByName(permissions, "MEDICINE_READ", "INVENTORY_READ", "DASHBOARD_READ"));
 
         // Create Users
-        User adminUser = createUser("admin@medistock.com", "Admin@123", "System", "Administrator", "+1234567890", Set.of(adminRole));
-        User pharmacistUser = createUser("pharmacist@medistock.com", "Pharmacist@123", "John", "Doe", "+1234567891", Set.of(pharmacistRole));
-        User staffUser = createUser("staff@medistock.com", "Staff@123", "Jane", "Smith", "+1234567892", Set.of(staffRole));
+        createUser("admin@medistock.com", "Admin@123", "System", "Administrator", "+1234567890", Set.of(adminRole));
+        createUser("pharmacist@medistock.com", "Pharmacist@123", "John", "Doe", "+1234567891", Set.of(pharmacistRole));
+        createUser("staff@medistock.com", "Staff@123", "Jane", "Smith", "+1234567892", Set.of(staffRole));
 
-        System.out.println("Sample data loaded successfully!");
+        // Create Suppliers
+        Supplier s1 = createSupplier("PharmaCorp Inc.", "John Smith", "contact@pharmacorp.com", "+1234567890", "123 Medical Drive", "New York", "NY", "10001", new BigDecimal("4.50"));
+        Supplier s2 = createSupplier("MedSupply Co.", "Jane Doe", "info@medsupply.com", "+1234567891", "456 Health Street", "Los Angeles", "CA", "90001", new BigDecimal("4.20"));
+        Supplier s3 = createSupplier("Global Pharma", "Bob Johnson", "sales@globalpharma.com", "+1234567892", "789 Wellness Blvd", "Chicago", "IL", "60601", new BigDecimal("4.80"));
+
+        // Create Medicines
+        Medicine m1 = createMedicine("Amoxicillin", "Amoxicillin Trihydrate", "Antibiotic for bacterial infections", "Antibiotic", "Capsule", "500mg", "PharmaCorp Inc.", "1234567890123", 50, 500, 100);
+        Medicine m2 = createMedicine("Ibuprofen", "Ibuprofen", "Non-steroidal anti-inflammatory", "Pain Relief", "Tablet", "400mg", "MedSupply Co.", "1234567890124", 100, 1000, 200);
+        Medicine m3 = createMedicine("Paracetamol", "Acetaminophen", "Pain reliever & fever reducer", "Pain Relief", "Tablet", "500mg", "Global Pharma", "1234567890125", 200, 2000, 300);
+        Medicine m4 = createMedicine("Metformin", "Metformin Hydrochloride", "Diabetes medication", "Diabetes", "Tablet", "850mg", "PharmaCorp Inc.", "1234567890126", 80, 800, 150);
+        Medicine m5 = createMedicine("Omeprazole", "Omeprazole", "Proton pump inhibitor", "Gastric", "Capsule", "20mg", "MedSupply Co.", "1234567890127", 60, 600, 120);
+
+        // Create Inventory Batches
+        createInventory(m1, s1, "BATCH001", LocalDate.now().plusMonths(12), LocalDate.now().minusMonths(6), 150, new BigDecimal("5.00"), new BigDecimal("8.50"), "Main Warehouse", "A1", "S1");
+        createInventory(m2, s2, "BATCH002", LocalDate.now().plusMonths(18), LocalDate.now().minusMonths(3), 300, new BigDecimal("2.50"), new BigDecimal("4.00"), "Main Warehouse", "A2", "S2");
+        createInventory(m3, s3, "BATCH003", LocalDate.now().plusMonths(15), LocalDate.now().minusMonths(2), 500, new BigDecimal("1.50"), new BigDecimal("3.00"), "Main Warehouse", "A3", "S3");
+        createInventory(m4, s1, "BATCH004", LocalDate.now().plusMonths(8), LocalDate.now().minusMonths(5), 120, new BigDecimal("8.00"), new BigDecimal("12.00"), "Main Warehouse", "B1", "S4");
+        createInventory(m5, s2, "BATCH005", LocalDate.now().plusMonths(10), LocalDate.now().minusMonths(4), 200, new BigDecimal("6.00"), new BigDecimal("10.00"), "Main Warehouse", "B2", "S5");
+
+        System.out.println("Sample MediStock data loaded successfully!");
     }
 
     private Permission createPermission(String name, String description, String category) {
@@ -113,6 +138,56 @@ public class DataLoader implements CommandLineRunner {
         return userRepository.save(user);
     }
 
+    private Supplier createSupplier(String name, String contact, String email, String phone, String address, String city, String state, String zip, BigDecimal rating) {
+        Supplier s = new Supplier();
+        s.setName(name);
+        s.setContactPerson(contact);
+        s.setEmail(email);
+        s.setPhoneNumber(phone);
+        s.setAddress(address);
+        s.setCity(city);
+        s.setState(state);
+        s.setPostalCode(zip);
+        s.setRating(rating);
+        s.setActive(true);
+        return supplierRepository.save(s);
+    }
+
+    private Medicine createMedicine(String name, String genericName, String description, String category, String dosageForm, String strength, String manufacturer, String barcode, int minStock, int maxStock, int reorder) {
+        Medicine m = new Medicine();
+        m.setName(name);
+        m.setGenericName(genericName);
+        m.setDescription(description);
+        m.setCategory(category);
+        m.setDosageForm(dosageForm);
+        m.setStrength(strength);
+        m.setManufacturer(manufacturer);
+        m.setBarcode(barcode);
+        m.setMinStockLevel(minStock);
+        m.setMaxStockLevel(maxStock);
+        m.setReorderLevel(reorder);
+        m.setUnitOfMeasure("units");
+        m.setActive(true);
+        return medicineRepository.save(m);
+    }
+
+    private Inventory createInventory(Medicine medicine, Supplier supplier, String batch, LocalDate expiry, LocalDate mfd, int qty, BigDecimal cost, BigDecimal price, String loc, String sec, String shelf) {
+        Inventory inv = new Inventory();
+        inv.setMedicine(medicine);
+        inv.setSupplier(supplier);
+        inv.setBatchNumber(batch);
+        inv.setExpiryDate(expiry);
+        inv.setManufacturingDate(mfd);
+        inv.setQuantity(qty);
+        inv.setUnitCost(cost);
+        inv.setSellingPrice(price);
+        inv.setLocation(loc);
+        inv.setWarehouseSection(sec);
+        inv.setShelfNumber(shelf);
+        inv.setAvailable(true);
+        return inventoryRepository.save(inv);
+    }
+
     private Set<Permission> getPermissionsByName(Set<Permission> permissions, String... names) {
         Set<Permission> result = new HashSet<>();
         for (Permission permission : permissions) {
@@ -126,3 +201,4 @@ public class DataLoader implements CommandLineRunner {
         return result;
     }
 }
+

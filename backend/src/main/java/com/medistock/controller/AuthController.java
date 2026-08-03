@@ -36,6 +36,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
 
+    @PostMapping("/google")
+    @Operation(summary = "Google OAuth login or registration")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        AuthResponse response = authService.googleLogin(request);
+        return ResponseEntity.ok(ApiResponse.success("Google authentication successful", response));
+    }
+
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
     public ResponseEntity<ApiResponse<Void>> logout(@RequestHeader("Authorization") String token) {

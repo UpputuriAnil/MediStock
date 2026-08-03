@@ -4,7 +4,7 @@
 USE medistock;
 
 -- Insert Permissions
-INSERT INTO permissions (name, description, category) VALUES
+INSERT IGNORE INTO permissions (name, description, category) VALUES
 -- User Permissions
 ('USER_CREATE', 'Create new users', 'USER'),
 ('USER_READ', 'View user information', 'USER'),
@@ -45,17 +45,17 @@ INSERT INTO permissions (name, description, category) VALUES
 ('NOTIFICATION_SEND', 'Send notifications', 'NOTIFICATION');
 
 -- Insert Roles
-INSERT INTO roles (name, description) VALUES
+INSERT IGNORE INTO roles (name, description) VALUES
 ('ROLE_ADMIN', 'Administrator with full system access'),
 ('ROLE_PHARMACIST', 'Pharmacist with medicine and inventory management access'),
 ('ROLE_STAFF', 'Staff with read-only access to medicines and inventory');
 
 -- Assign Permissions to Admin Role (Full Access)
-INSERT INTO role_permissions (role_id, permission_id)
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'ROLE_ADMIN';
 
 -- Assign Permissions to Pharmacist Role
-INSERT INTO role_permissions (role_id, permission_id)
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p 
 WHERE r.name = 'ROLE_PHARMACIST' 
 AND p.name IN (
@@ -67,7 +67,7 @@ AND p.name IN (
 );
 
 -- Assign Permissions to Staff Role
-INSERT INTO role_permissions (role_id, permission_id)
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p 
 WHERE r.name = 'ROLE_STAFF' 
 AND p.name IN (
@@ -78,7 +78,7 @@ AND p.name IN (
 
 -- Insert Admin User (Password: Admin@123)
 -- Note: In production, use a stronger password and change this immediately
-INSERT INTO users (
+INSERT IGNORE INTO users (
     email, 
     password, 
     first_name, 
@@ -103,12 +103,12 @@ INSERT INTO users (
 );
 
 -- Assign Admin Role to Admin User
-INSERT INTO user_roles (user_id, role_id)
+INSERT IGNORE INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u, roles r 
 WHERE u.email = 'admin@medistock.com' AND r.name = 'ROLE_ADMIN';
 
 -- Insert Sample Pharmacist User (Password: Pharmacist@123)
-INSERT INTO users (
+INSERT IGNORE INTO users (
     email, 
     password, 
     first_name, 
@@ -133,12 +133,12 @@ INSERT INTO users (
 );
 
 -- Assign Pharmacist Role to Sample Pharmacist
-INSERT INTO user_roles (user_id, role_id)
+INSERT IGNORE INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u, roles r 
 WHERE u.email = 'pharmacist@medistock.com' AND r.name = 'ROLE_PHARMACIST';
 
 -- Insert Sample Staff User (Password: Staff@123)
-INSERT INTO users (
+INSERT IGNORE INTO users (
     email, 
     password, 
     first_name, 
@@ -163,6 +163,6 @@ INSERT INTO users (
 );
 
 -- Assign Staff Role to Sample Staff
-INSERT INTO user_roles (user_id, role_id)
+INSERT IGNORE INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u, roles r 
 WHERE u.email = 'staff@medistock.com' AND r.name = 'ROLE_STAFF';

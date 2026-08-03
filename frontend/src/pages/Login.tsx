@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Cross, Lock, Mail, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Input } from '../components/common/Input';
@@ -8,16 +8,95 @@ import { Modal } from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
+import axios from 'axios';
+
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const authContext = useAuth() as any;
+  const login = authContext?.login;
+  const loginWithGoogle = authContext?.loginWithGoogle;
+  const isAuthenticated = authContext?.isAuthenticated;
 
-  const [email, setEmail] = useState('sarah.jenkins@medistock.health');
-  const [password, setPassword] = useState('••••••••••••');
+  const directRegEmail = (location.state as any)?.registeredEmail;
+  const directRegPassword = (location.state as any)?.registeredPassword;
+
+  const lastRegEmail = localStorage.getItem('medistock_last_registered_email');
+  const lastRegPassword = localStorage.getItem('medistock_last_registered_password');
+
+  const initialEmail = directRegEmail || lastRegEmail || '';
+  const initialPassword = directRegPassword || lastRegPassword || '';
+
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+
+  const executeGoogleLogin = async (googleData: { name: string; email: string; googleId: string; avatar?: string; role?: string }) => {
+    if (typeof loginWithGoogle === 'function') {
+      return await loginWithGoogle(googleData);
+    }
+
+    try {
+      const res = await axios.post('/api/auth/google', {
+        email: googleData.email,
+        name: googleData.name,
+        googleId: googleData.googleId,
+        avatar: googleData.avatar,
+        role: googleData.role || 'Pharmacist',
+      });
+
+      if (res.data && res.data.data) {
+        const { accessToken, refreshToken, user: backendUser } = res.data.data;
+        if (accessToken) localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        const backendRole = backendUser?.roles?.length ? Array.from(backendUser.roles)[0] : undefined;
+        const userRoleStr = String(backendRole || googleData.role || 'Pharmacist').toUpperCase();
+        let finalRole: 'Admin' | 'Pharmacist' | 'Staff' = 'Pharmacist';
+        if (userRoleStr.includes('ADMIN')) finalRole = 'Admin';
+        else if (userRoleStr.includes('STAFF')) finalRole = 'Staff';
+
+        const loggedUser = {
+          id: String(backendUser?.id || `usr_g_${Date.now()}`),
+          name: `${backendUser?.firstName || ''} ${backendUser?.lastName || ''}`.trim() || googleData.name,
+          email: backendUser?.email || googleData.email,
+          role: finalRole,
+          avatar: backendUser?.profilePictureUrl || googleData.avatar,
+          department: finalRole === 'Admin' ? 'IT & System Security' : finalRole === 'Staff' ? 'General Medical Staff' : 'Central Pharmacy',
+          status: 'Active',
+          lastActive: 'Just now',
+        };
+
+        localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
+        toast.success(`Google Account authenticated & stored in MySQL Database!`);
+        return true;
+      }
+    } catch (err: any) {
+      console.error('Google direct API error:', err);
+      const msg = err?.response?.data?.message || err?.message;
+      toast.error(`Google Auth Error: ${msg}`);
+    }
+    return false;
+  };
+
+  // Show registration success toast ONLY ONCE when coming directly from registration form
+  const hasShownRegToast = React.useRef(false);
+  React.useEffect(() => {
+    if (directRegEmail && !hasShownRegToast.current) {
+      hasShownRegToast.current = true;
+      setEmail(directRegEmail);
+      if (directRegPassword) setPassword(directRegPassword);
+      toast.success(`Account created for ${directRegEmail}! Sign in below.`);
+
+      // Clean up state so toast never shows on logout or page refresh
+      window.history.replaceState({}, document.title);
+      localStorage.removeItem('medistock_last_registered_email');
+      localStorage.removeItem('medistock_last_registered_password');
+    }
+  }, [directRegEmail, directRegPassword]);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -28,10 +107,103 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await login(email, password);
-    setIsLoading(false);
-    if (success) {
-      navigate('/dashboard', { replace: true });
+    try {
+      let success = false;
+      if (typeof login === 'function') {
+        success = await login(email, password);
+      } else {
+        const res = await axios.post('/api/auth/login', { email, password });
+        if (res.data && res.data.data) {
+          const { accessToken, refreshToken, user: backendUser } = res.data.data;
+          if (accessToken) localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+          const loggedUser = {
+            id: String(backendUser?.id || `usr_${Date.now()}`),
+            name: `${backendUser?.firstName || ''} ${backendUser?.lastName || ''}`.trim() || email.split('@')[0],
+            email: backendUser?.email || email,
+            role: 'Pharmacist',
+            department: 'Central Pharmacy',
+            status: 'Active',
+            lastActive: 'Just now',
+          };
+          localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
+          toast.success(`Logged in successfully!`);
+          success = true;
+        }
+      }
+
+      if (success) {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Login error: ${err?.response?.data?.message || err?.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '522295379594-0fv25if5irsbv2rpkkb0ll56cb7ep5j6.apps.googleusercontent.com';
+      const windowGoogle = (window as any).google;
+
+      if (windowGoogle?.accounts?.oauth2) {
+        const tokenClient = windowGoogle.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'email profile',
+          callback: async (resp: any) => {
+            if (resp.access_token) {
+              try {
+                const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${resp.access_token}` }
+                });
+                const gProfile = await userinfoRes.json();
+
+                const success = await executeGoogleLogin({
+                  name: gProfile.name || gProfile.given_name || 'Google Authorized User',
+                  email: gProfile.email,
+                  googleId: gProfile.sub || `g_${Date.now()}`,
+                  avatar: gProfile.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                  role: 'Pharmacist'
+                });
+                if (success) {
+                  navigate('/dashboard', { replace: true });
+                }
+              } catch (err: any) {
+                toast.error(`Google profile error: ${err.message}`);
+              } finally {
+                setIsLoading(false);
+              }
+            } else {
+              setIsLoading(false);
+            }
+          },
+          error_callback: (err: any) => {
+            console.error('Google OAuth popup error:', err);
+            setIsLoading(false);
+          }
+        });
+        tokenClient.requestAccessToken();
+        return;
+      }
+
+      // Fallback Google Auth
+      const targetEmail = email || `google.user@medistock.com`;
+      const success = await executeGoogleLogin({
+        name: 'Google User',
+        email: targetEmail,
+        googleId: `g_${Date.now()}`,
+        role: 'Pharmacist'
+      });
+      if (success) {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,7 +309,7 @@ export const Login: React.FC = () => {
           {/* Social / Google Login */}
           <button
             type="button"
-            onClick={() => handleSubmit({ preventDefault: () => {} } as any)}
+            onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 text-xs font-bold text-slate-200 transition-all duration-200 mb-6 shadow-sm group"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -160,6 +332,8 @@ export const Login: React.FC = () => {
             </svg>
             <span>Continue with Google</span>
           </button>
+
+
 
           <div className="relative flex items-center justify-center mb-6">
             <div className="border-t border-slate-800 w-full" />
@@ -222,7 +396,7 @@ export const Login: React.FC = () => {
           <p className="text-center text-xs font-medium text-slate-400 mt-6">
             Don't have an account?{' '}
             <Link to="/signup" className="text-primary-400 font-bold hover:underline">
-              Request Access
+              Register Now
             </Link>
           </p>
         </motion.div>

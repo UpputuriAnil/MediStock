@@ -44,13 +44,13 @@ public class AuthServiceImpl implements AuthService {
     @Value("${app.security.password-reset.token-expiration}")
     private long passwordResetTokenExpiration;
 
-    public AuthServiceImpl(UserRepository userRepository, RoleRepository roleRepository, 
-                          RefreshTokenRepository refreshTokenRepository, 
-                          PasswordResetTokenRepository passwordResetTokenRepository,
-                          EmailVerificationTokenRepository emailVerificationTokenRepository,
-                          PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
-                          AuthenticationManager authenticationManager, 
-                          PasswordValidator passwordValidator) {
+    public AuthServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailVerificationTokenRepository emailVerificationTokenRepository,
+            PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+            AuthenticationManager authenticationManager,
+            PasswordValidator passwordValidator) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -94,16 +94,33 @@ public class AuthServiceImpl implements AuthService {
         user.setCredentialsNonExpired(true);
         user.setRoles(new HashSet<>());
 
-        // Assign default role (STAFF) if it exists, otherwise create it
-        Role defaultRole = roleRepository.findActiveByName(SecurityConstants.ROLE_STAFF)
+        // Assign role based on user selection or default to STAFF
+        String targetRoleName = SecurityConstants.ROLE_STAFF;
+        if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
+            String roleInput = request.getRole().trim().toUpperCase();
+            if (roleInput.contains("ADMIN")) {
+                targetRoleName = SecurityConstants.ROLE_ADMIN;
+            } else if (roleInput.contains("PHARM")) {
+                targetRoleName = SecurityConstants.ROLE_PHARMACIST;
+            } else if (roleInput.contains("STAFF")) {
+                targetRoleName = SecurityConstants.ROLE_STAFF;
+            } else if (roleInput.startsWith("ROLE_")) {
+                targetRoleName = roleInput;
+            } else {
+                targetRoleName = "ROLE_" + roleInput;
+            }
+        }
+
+        final String selectedRoleName = targetRoleName;
+        Role assignedRole = roleRepository.findActiveByName(selectedRoleName)
                 .orElseGet(() -> {
                     Role newRole = new Role();
-                    newRole.setName(SecurityConstants.ROLE_STAFF);
-                    newRole.setDescription("Default staff role");
+                    newRole.setName(selectedRoleName);
+                    newRole.setDescription(selectedRoleName.replace("ROLE_", "") + " Role");
                     newRole.setDeleted(false);
                     return roleRepository.save(newRole);
                 });
-        user.getRoles().add(defaultRole);
+        user.getRoles().add(assignedRole);
 
         // Save user
         user = userRepository.save(user);
@@ -116,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
             emailToken.setUser(user);
             emailToken.setExpiryDate(LocalDateTime.now().plus(Duration.ofMillis(emailVerificationTokenExpiration)));
             emailVerificationTokenRepository.save(emailToken);
-            
+
             // TODO: Send verification email
             System.out.println("Email verification token: " + verificationToken);
         }
@@ -136,14 +153,73 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        String email = request.getEmail();
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+
+            String[] nameParts = (request.getName() != null ? request.getName() : "Google User").split(" ", 2);
+            user.setFirstName(nameParts[0]);
+            user.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+            user.setEnabled(true);
+            user.setEmailVerified(true);
+            user.setOauthProvider("GOOGLE");
+            user.setOauthProviderId(request.getGoogleId());
+            user.setProfilePictureUrl(request.getAvatar());
+            user.setAccountNonExpired(true);
+            user.setAccountNonLocked(true);
+            user.setCredentialsNonExpired(true);
+            user.setRoles(new HashSet<>());
+
+            String targetRoleName = SecurityConstants.ROLE_STAFF;
+            if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
+                String roleInput = request.getRole().trim().toUpperCase();
+                if (roleInput.contains("ADMIN")) {
+                    targetRoleName = SecurityConstants.ROLE_ADMIN;
+                } else if (roleInput.contains("PHARM")) {
+                    targetRoleName = SecurityConstants.ROLE_PHARMACIST;
+                } else if (roleInput.contains("STAFF")) {
+                    targetRoleName = SecurityConstants.ROLE_STAFF;
+                } else if (roleInput.startsWith("ROLE_")) {
+                    targetRoleName = roleInput;
+                } else {
+                    targetRoleName = "ROLE_" + roleInput;
+                }
+            }
+
+            final String selectedRoleName = targetRoleName;
+            Role defaultRole = roleRepository.findActiveByName(selectedRoleName)
+                    .orElseGet(() -> {
+                        Role newRole = new Role();
+                        newRole.setName(selectedRoleName);
+                        newRole.setDescription(selectedRoleName.replace("ROLE_", "") + " Role");
+                        newRole.setDeleted(false);
+                        return roleRepository.save(newRole);
+                    });
+
+            user.getRoles().add(defaultRole);
+            user = userRepository.save(user);
+        }
+
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+        saveRefreshToken(user, refreshToken);
+
+        return buildAuthResponse(accessToken, refreshToken, user);
+    }
+
+    @Override
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+                            request.getPassword()));
 
             User user = userRepository.findActiveByEmail(request.getEmail())
                     .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
@@ -322,7 +398,8 @@ public class AuthServiceImpl implements AuthService {
                     .collect(java.util.stream.Collectors.toSet());
 
             Set<String> permissions = user.getRoles().stream()
-                    .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream() : java.util.stream.Stream.empty())
+                    .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream()
+                            : java.util.stream.Stream.empty())
                     .map(permission -> permission.getName())
                     .collect(java.util.stream.Collectors.toSet());
 
@@ -334,8 +411,7 @@ public class AuthServiceImpl implements AuthService {
                     user.getPhoneNumber(),
                     user.getEmailVerified(),
                     roles,
-                    permissions
-            );
+                    permissions);
 
             AuthResponse authResponse = new AuthResponse();
             authResponse.setAccessToken(accessToken);

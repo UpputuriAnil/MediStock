@@ -23,8 +23,12 @@ import { Settings } from './pages/Settings';
 
 // Protected Route Wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
+  const { isAuthenticated, user } = useAuth();
+  const hasToken = !!localStorage.getItem('accessToken');
+  const hasSavedUser = !!localStorage.getItem('medistock_user');
+  const isAuth = isAuthenticated || !!user || (hasToken && hasSavedUser);
+
+  if (!isAuth) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;

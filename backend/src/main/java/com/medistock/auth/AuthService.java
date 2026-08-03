@@ -8,6 +8,8 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest request);
 
+    AuthResponse googleLogin(GoogleLoginRequest request);
+
     void logout(String token);
 
     AuthResponse refreshToken(RefreshTokenRequest request);

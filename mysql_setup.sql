@@ -96,12 +96,12 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 -- Refresh tokens table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    token VARCHAR(500) NOT NULL,
     user_id BIGINT NOT NULL,
     expiry_date DATETIME NOT NULL,
     revoked BOOLEAN DEFAULT FALSE,
     revoked_at DATETIME,
-    replaced_by_token VARCHAR(255),
+    replaced_by_token VARCHAR(500),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version BIGINT DEFAULT 0,

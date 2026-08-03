@@ -40,19 +40,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { unreadCount } = useNotifications();
   const location = useLocation();
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Medicine Inventory', path: '/medicines', icon: Pill },
-    { name: 'Categories', path: '/categories', icon: Tags },
-    { name: 'Suppliers', path: '/suppliers', icon: Truck },
-    { name: 'Purchase Orders', path: '/purchase-orders', icon: ShoppingBag },
-    { name: 'Stock Logs', path: '/stock-logs', icon: History },
-    { name: 'Expiry Tracking', path: '/expiry-tracking', icon: Clock },
-    { name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount },
-    { name: 'Reports', path: '/reports', icon: BarChart3 },
-    { name: 'Users', path: '/users', icon: Users },
-    { name: 'Settings', path: '/settings', icon: Settings },
+  const userRoleStr = (user?.role || (user as any)?.roles?.[0] || 'Pharmacist').toLowerCase();
+  const isAdmin = userRoleStr.includes('admin');
+  const isPharmacist = userRoleStr.includes('pharm');
+
+  const allMenuItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'pharmacist', 'staff'] },
+    { name: 'Medicine Inventory', path: '/medicines', icon: Pill, roles: ['admin', 'pharmacist', 'staff'] },
+    { name: 'Categories', path: '/categories', icon: Tags, roles: ['admin', 'pharmacist'] },
+    { name: 'Suppliers', path: '/suppliers', icon: Truck, roles: ['admin', 'pharmacist'] },
+    { name: 'Purchase Orders', path: '/purchase-orders', icon: ShoppingBag, roles: ['admin', 'pharmacist'] },
+    { name: 'Stock Logs', path: '/stock-logs', icon: History, roles: ['admin', 'pharmacist', 'staff'] },
+    { name: 'Expiry Tracking', path: '/expiry-tracking', icon: Clock, roles: ['admin', 'pharmacist', 'staff'] },
+    { name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount, roles: ['admin', 'pharmacist', 'staff'] },
+    { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['admin', 'pharmacist'] },
+    { name: 'Users', path: '/users', icon: Users, roles: ['admin'] },
+    { name: 'Settings', path: '/settings', icon: Settings, roles: ['admin'] },
   ];
+
+  const menuItems = allMenuItems.filter((item) => {
+    if (isAdmin) return true;
+    if (isPharmacist) return item.roles.includes('pharmacist');
+    return item.roles.includes('staff');
+  });
 
   return (
     <>
