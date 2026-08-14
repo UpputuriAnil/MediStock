@@ -1,6 +1,8 @@
 package com.medistock.service.impl;
 
 import com.medistock.entity.Medicine;
+import com.medistock.entity.Supplier;
+import com.medistock.repository.InventoryRepository;
 import com.medistock.repository.MedicineRepository;
 import com.medistock.service.MedicineService;
 import org.springframework.stereotype.Service;
@@ -13,9 +15,11 @@ import java.util.List;
 public class MedicineServiceImpl implements MedicineService {
 
     private final MedicineRepository medicineRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public MedicineServiceImpl(MedicineRepository medicineRepository) {
+    public MedicineServiceImpl(MedicineRepository medicineRepository, InventoryRepository inventoryRepository) {
         this.medicineRepository = medicineRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Override
@@ -69,6 +73,13 @@ public class MedicineServiceImpl implements MedicineService {
     @Override
     public List<Medicine> getLowStockMedicines() {
         return medicineRepository.findLowStockMedicines();
+    }
+
+    @Override
+    public List<Supplier> getSuppliersByMedicine(Long medicineId) {
+        // Ensure medicine exists
+        getMedicineById(medicineId);
+        return inventoryRepository.findSuppliersByMedicineId(medicineId);
     }
 
     @Override

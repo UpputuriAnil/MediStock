@@ -1,5 +1,6 @@
 package com.medistock.controller;
 
+import com.medistock.entity.Medicine;
 import com.medistock.entity.Supplier;
 import com.medistock.response.ApiResponse;
 import com.medistock.service.SupplierService;
@@ -63,6 +64,24 @@ public class SupplierController {
     public ResponseEntity<ApiResponse<List<Supplier>>> searchSuppliers(@RequestParam String keyword) {
         List<Supplier> response = supplierService.searchSuppliers(keyword);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/medicines")
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
+    @Operation(summary = "Get medicines associated with a supplier")
+    public ResponseEntity<ApiResponse<List<Medicine>>> getMedicinesBySupplier(@PathVariable Long id) {
+        List<Medicine> response = supplierService.getMedicinesBySupplier(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/{id}/medicines/{medicineId}")
+    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
+    @Operation(summary = "Link supplier with a medicine")
+    public ResponseEntity<ApiResponse<Void>> linkSupplierToMedicine(
+            @PathVariable Long id,
+            @PathVariable Long medicineId) {
+        supplierService.linkSupplierToMedicine(id, medicineId);
+        return ResponseEntity.ok(ApiResponse.success("Supplier linked with medicine successfully"));
     }
 
     @DeleteMapping("/{id}")

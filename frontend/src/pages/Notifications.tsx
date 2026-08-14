@@ -5,6 +5,9 @@ import { useNotifications } from '../context/NotificationContext';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 
+import { useAuth } from '../context/AuthContext';
+import { useRole } from '../hooks/useRole';
+
 export const Notifications: React.FC = () => {
   const {
     notifications,
@@ -14,6 +17,8 @@ export const Notifications: React.FC = () => {
     deleteNotification,
     clearAll,
   } = useNotifications();
+  const { user } = useAuth();
+  const { isAdmin, isPharmacist, isStaff, isSupplier } = useRole();
 
   const [categoryFilter, setCategoryFilter] = useState('All');
 
@@ -23,6 +28,19 @@ export const Notifications: React.FC = () => {
     return n.category === categoryFilter;
   });
 
+  const getRoleHeaderSubtitle = () => {
+    if (isSupplier) {
+      return 'Supplier Portal Notifications • Relevant purchase order requisitions, shipment dispatch requests, delivery acknowledgments, and fulfillment updates.';
+    }
+    if (isStaff) {
+      return 'Staff Operational Alerts • Low stock warnings, restock logs, batch expiration notices, and shift task assignments.';
+    }
+    if (isAdmin) {
+      return 'Enterprise Audit & Governance • Security compliance logs, user role audit alerts, network out-of-stock notices, and vendor registrations.';
+    }
+    return 'Pharmacy Operations Notifications • Real-time critical stock alerts, batch expiry warnings, purchase order status updates, and audit logs.';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -30,12 +48,16 @@ export const Notifications: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Notification Center
+              {isSupplier ? 'Supplier Notifications' : 'Notification Center'}
             </h1>
-            {unreadCount > 0 && <Badge variant="danger">{unreadCount} Unread</Badge>}
+            {unreadCount > 0 ? (
+              <Badge variant="danger">{unreadCount} Unread</Badge>
+            ) : (
+              <Badge variant="success">All Caught Up</Badge>
+            )}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Real-time critical stock alerts, batch expiry warnings, PO status updates, and audit notifications
+            {getRoleHeaderSubtitle()}
           </p>
         </div>
 

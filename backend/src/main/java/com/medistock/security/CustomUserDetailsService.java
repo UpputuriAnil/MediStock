@@ -39,8 +39,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .accountLocked(!user.getAccountNonLocked())
                 .credentialsExpired(!user.getCredentialsNonExpired())
                 .authorities(user.getRoles().stream()
-                        .flatMap(role -> role.getPermissions().stream()
-                                .map(permission -> new SimpleGrantedAuthority(permission.getName())))
+                        .flatMap(role -> {
+                            java.util.Set<org.springframework.security.core.GrantedAuthority> auths = role.getPermissions().stream()
+                                    .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                                    .collect(Collectors.toSet());
+                            auths.add(new SimpleGrantedAuthority(role.getName()));
+                            return auths.stream();
+                        })
                         .collect(Collectors.toSet()))
                 .build();
     }
@@ -62,8 +67,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .accountLocked(!user.getAccountNonLocked())
                 .credentialsExpired(!user.getCredentialsNonExpired())
                 .authorities(user.getRoles().stream()
-                        .flatMap(role -> role.getPermissions().stream()
-                                .map(permission -> new SimpleGrantedAuthority(permission.getName())))
+                        .flatMap(role -> {
+                            java.util.Set<org.springframework.security.core.GrantedAuthority> auths = role.getPermissions().stream()
+                                    .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                                    .collect(Collectors.toSet());
+                            auths.add(new SimpleGrantedAuthority(role.getName()));
+                            return auths.stream();
+                        })
                         .collect(Collectors.toSet()))
                 .build();
     }

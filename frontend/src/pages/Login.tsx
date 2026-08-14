@@ -17,6 +17,7 @@ export const Login: React.FC = () => {
   const login = authContext?.login;
   const loginWithGoogle = authContext?.loginWithGoogle;
   const isAuthenticated = authContext?.isAuthenticated;
+  const user = authContext?.user;
 
   const directRegEmail = (location.state as any)?.registeredEmail;
   const directRegPassword = (location.state as any)?.registeredPassword;
@@ -24,8 +25,8 @@ export const Login: React.FC = () => {
   const lastRegEmail = localStorage.getItem('medistock_last_registered_email');
   const lastRegPassword = localStorage.getItem('medistock_last_registered_password');
 
-  const initialEmail = directRegEmail || lastRegEmail || '';
-  const initialPassword = directRegPassword || lastRegPassword || '';
+  const initialEmail = directRegEmail || '';
+  const initialPassword = directRegPassword || '';
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
@@ -36,7 +37,7 @@ export const Login: React.FC = () => {
 
   const executeGoogleLogin = async (googleData: { name: string; email: string; googleId: string; avatar?: string; role?: string }) => {
     if (typeof loginWithGoogle === 'function') {
-      return await loginWithGoogle(googleData);
+      return await loginWithGoogle(googleData, rememberMe);
     }
 
     try {
@@ -70,7 +71,14 @@ export const Login: React.FC = () => {
           lastActive: 'Just now',
         };
 
-        localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
+        if (rememberMe) {
+          localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
+          localStorage.setItem('user', JSON.stringify(loggedUser));
+          localStorage.setItem('medistock_remember_me', 'true');
+        } else {
+          sessionStorage.setItem('medistock_user', JSON.stringify(loggedUser));
+          sessionStorage.setItem('user', JSON.stringify(loggedUser));
+        }
         toast.success(`Google Account authenticated & stored in MySQL Database!`);
         return true;
       }
@@ -98,42 +106,35 @@ export const Login: React.FC = () => {
     }
   }, [directRegEmail, directRegPassword]);
 
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  // Login form renders cleanly for user credentials entry
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      const cleanEmail = (email || '').toLowerCase().trim();
+      const cleanPassword = (password || '').trim();
+
       let success = false;
       if (typeof login === 'function') {
-        success = await login(email, password);
-      } else {
-        const res = await axios.post('/api/auth/login', { email, password });
-        if (res.data && res.data.data) {
-          const { accessToken, refreshToken, user: backendUser } = res.data.data;
-          if (accessToken) localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          const loggedUser = {
-            id: String(backendUser?.id || `usr_${Date.now()}`),
-            name: `${backendUser?.firstName || ''} ${backendUser?.lastName || ''}`.trim() || email.split('@')[0],
-            email: backendUser?.email || email,
-            role: 'Pharmacist',
-            department: 'Central Pharmacy',
-            status: 'Active',
-            lastActive: 'Just now',
-          };
-          localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
-          toast.success(`Logged in successfully!`);
-          success = true;
-        }
+        success = await login(cleanEmail, cleanPassword, rememberMe);
       }
 
       if (success) {
-        navigate('/dashboard', { replace: true });
+        const isTargetAdmin = cleanEmail.includes('admin') || cleanEmail.includes('anilupputuri') || cleanEmail === 'admin@medistock.com';
+        const isTargetSupplier = cleanEmail.includes('supplier') || cleanEmail === 'supplier@medistock.com';
+        const isTargetStaff = cleanEmail.includes('staff') || cleanEmail === 'staff@medistock.com';
+
+        let targetRoute = '/pharmacist-dashboard';
+        if (isTargetAdmin) {
+          targetRoute = '/admin-dashboard';
+        } else if (isTargetSupplier) {
+          targetRoute = '/supplier-dashboard';
+        } else if (isTargetStaff) {
+          targetRoute = '/staff-dashboard';
+        }
+
+        navigate(targetRoute, { replace: true });
       }
     } catch (err: any) {
       console.error(err);
@@ -211,6 +212,17 @@ export const Login: React.FC = () => {
     e.preventDefault();
     toast.success(`Password reset instructions sent to ${forgotEmail || email}`);
     setIsForgotModalOpen(false);
+  };
+
+  const getRoleProfileName = (roleKey: string, defaultName: string) => {
+    try {
+      const raw = localStorage.getItem(`medistock_profile_${roleKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.name) return parsed.name;
+      }
+    } catch (e) {}
+    return defaultName;
   };
 
   return (
@@ -333,14 +345,64 @@ export const Login: React.FC = () => {
             <span>Continue with Google</span>
           </button>
 
-
-
           <div className="relative flex items-center justify-center mb-6">
             <div className="border-t border-slate-800 w-full" />
             <span className="bg-slate-900 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest absolute">
               OR EMAIL LOGIN
             </span>
           </div>
+
+          <div className="mb-4">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">Demo Account Quick Select:</span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { setEmail('admin@medistock.com'); setPassword('Admin@123'); }}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
+                  email === 'admin@medistock.com'
+                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
+                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                }`}
+              >
+                🔑 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('pharmacist@medistock.com'); setPassword('Pharmacist@123'); }}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
+                  email === 'pharmacist@medistock.com'
+                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
+                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                }`}
+              >
+                💊 Pharmacist
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('staff@medistock.com'); setPassword('Staff@123'); }}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
+                  email === 'staff@medistock.com'
+                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
+                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                }`}
+              >
+                📋 Staff
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('supplier@medistock.com'); setPassword('Supplier@123'); }}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
+                  email === 'supplier@medistock.com'
+                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
+                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
+                }`}
+              >
+                🚚 Supplier
+              </button>
+            </div>
+          </div>
+
+
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input

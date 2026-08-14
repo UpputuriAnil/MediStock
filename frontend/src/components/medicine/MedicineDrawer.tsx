@@ -5,7 +5,7 @@ import { Button } from '../common/Button';
 import { Medicine } from '../../types/inventory';
 import { useInventory } from '../../context/InventoryContext';
 import { formatCurrency, getExpiryStatus } from '../../utils/formatters';
-import { Plus, Minus, Calendar, MapPin, Layers, Truck, ShieldAlert, FileText } from 'lucide-react';
+import { Plus, Minus, Calendar, MapPin, Layers, Truck, ShieldAlert, FileText, Trash2 } from 'lucide-react';
 
 interface MedicineDrawerProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ export const MedicineDrawer: React.FC<MedicineDrawerProps> = ({
   onClose,
   medicine,
 }) => {
-  const { adjustStock } = useInventory();
+  const { adjustStock, deleteMedicine } = useInventory();
   const [adjustAmount, setAdjustAmount] = useState<number>(10);
   const [adjustReason, setAdjustReason] = useState<string>('Routine stock replenishment');
 
@@ -114,7 +114,7 @@ export const MedicineDrawer: React.FC<MedicineDrawerProps> = ({
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
               <span className="text-[10px] text-slate-400 flex items-center gap-1 mb-1">
-                <Layers className="w-3 h-3 text-primary-500" /> Therapeutic Category
+                <Layers className="w-3 h-3 text-primary-500" /> Medicine Category
               </span>
               <p className="font-bold text-slate-800 dark:text-slate-200">{medicine.category}</p>
             </div>
@@ -173,6 +173,22 @@ export const MedicineDrawer: React.FC<MedicineDrawerProps> = ({
           <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
             {medicine.description || 'No detailed clinical notes attached.'}
           </p>
+        </div>
+
+        {/* Delete Medicine Action Button */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <Button
+            variant="danger"
+            size="md"
+            className="w-full flex items-center justify-center gap-2 font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20"
+            onClick={() => {
+              deleteMedicine(medicine.id);
+              onClose();
+            }}
+            leftIcon={<Trash2 className="w-4 h-4" />}
+          >
+            Delete Medicine Item
+          </Button>
         </div>
       </div>
     </Drawer>

@@ -35,7 +35,13 @@ public class Medicine {
     private String strength;
 
     @Column(length = 200)
+    private String brandName;
+
+    @Column(length = 200)
     private String manufacturer;
+
+    @Column(length = 200)
+    private String supplier;
 
     @Column(length = 100)
     private String barcode;
@@ -69,6 +75,18 @@ public class Medicine {
 
     @Column(name = "is_active")
     private Boolean active = true;
+
+    @Column(name = "stock")
+    private Integer stock = 0;
+
+    @Column(name = "price")
+    private Double price = 0.0;
+
+    @Column(name = "batch_number", length = 100)
+    private String batchNumber;
+
+    @Column(name = "status", length = 50)
+    private String status = "In Stock";
 
     @Column(columnDefinition = "TEXT")
     private String notes;
@@ -155,12 +173,28 @@ public class Medicine {
         this.strength = strength;
     }
 
+    public String getBrandName() {
+        return brandName;
+    }
+
+    public void setBrandName(String brandName) {
+        this.brandName = brandName;
+    }
+
     public String getManufacturer() {
         return manufacturer;
     }
 
     public void setManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
+    }
+
+    public String getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(String supplier) {
+        this.supplier = supplier;
     }
 
     public String getBarcode() {
@@ -249,6 +283,38 @@ public class Medicine {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public String getBatchNumber() {
+        return batchNumber;
+    }
+
+    public void setBatchNumber(String batchNumber) {
+        this.batchNumber = batchNumber;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getNotes() {

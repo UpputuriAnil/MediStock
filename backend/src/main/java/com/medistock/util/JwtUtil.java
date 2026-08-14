@@ -55,7 +55,7 @@ public class JwtUtil {
         claims.put("roles", roles);
         
         List<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
+                .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream() : java.util.stream.Stream.empty())
                 .map(permission -> permission.getName())
                 .distinct()
                 .collect(Collectors.toList());

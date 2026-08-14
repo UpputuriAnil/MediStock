@@ -19,4 +19,6 @@ public interface AuthService {
     void resetPassword(ResetPasswordRequest request);
 
     void verifyEmail(String token);
+
+    AuthResponse.UserDto getCurrentUser(String token);
 }

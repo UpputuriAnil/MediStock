@@ -11,7 +11,7 @@ public class PasswordValidator {
     private static final Pattern UPPERCASE_PATTERN = Pattern.compile("[A-Z]");
     private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
     private static final Pattern DIGIT_PATTERN = Pattern.compile("[0-9]");
-    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[@#$%^&+=!]");
+    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[^A-Za-z0-9\\s]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
 
     public boolean isValid(String password) {

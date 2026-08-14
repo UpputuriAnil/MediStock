@@ -1,6 +1,7 @@
 package com.medistock.controller;
 
 import com.medistock.entity.Medicine;
+import com.medistock.entity.Supplier;
 import com.medistock.response.ApiResponse;
 import com.medistock.service.MedicineService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,6 +71,14 @@ public class MedicineController {
     @Operation(summary = "Get low stock medicines")
     public ResponseEntity<ApiResponse<List<Medicine>>> getLowStockMedicines() {
         List<Medicine> response = medicineService.getLowStockMedicines();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/suppliers")
+    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @Operation(summary = "Get suppliers associated with a medicine")
+    public ResponseEntity<ApiResponse<List<Supplier>>> getSuppliersByMedicine(@PathVariable Long id) {
+        List<Supplier> response = medicineService.getSuppliersByMedicine(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

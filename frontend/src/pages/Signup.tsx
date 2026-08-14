@@ -78,31 +78,19 @@ export const Signup: React.FC = () => {
       let success = false;
       if (typeof signupFn === 'function') {
         success = await signupFn(name, email, role, password);
-      } else {
-        // Direct API registration fallback if context method is missing
-        const nameParts = name.trim().split(' ');
-        const firstName = nameParts[0] || name;
-        const lastName = nameParts.slice(1).join(' ') || 'User';
-        const res = await axios.post('/api/auth/register', {
-          email,
-          password,
-          confirmPassword: password,
-          firstName,
-          lastName,
-          phoneNumber: '+1234567890',
-          role,
-        });
-
-        if (res.data && res.data.data) {
-          const { accessToken, refreshToken } = res.data.data;
-          if (accessToken) localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          toast.success(`Account created for ${email}!`);
-          success = true;
+        if (success) {
+          let registry: Record<string, any> = {};
+          try {
+            const raw = localStorage.getItem('medistock_user_registry');
+            if (raw && raw !== 'undefined' && raw !== 'null') registry = JSON.parse(raw);
+          } catch (e) { }
+          registry[email.toLowerCase()] = { name, email, role, password };
+          localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
         }
       }
 
       if (success) {
+        localStorage.setItem('medistock_last_registered_name', name);
         localStorage.setItem('medistock_last_registered_email', email);
         if (password) localStorage.setItem('medistock_last_registered_password', password);
 
@@ -116,14 +104,18 @@ export const Signup: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Registration submit error:', err);
-      const apiErrorMessage = err?.response?.data?.message || err?.response?.data?.error || err.message;
+      let apiErrorMessage = err?.response?.data?.message || err?.response?.data?.error || err.message;
+      if (err?.response?.data?.data && typeof err.response.data.data === 'object') {
+        const fieldErrors = Object.values(err.response.data.data).filter(Boolean).join('. ');
+        if (fieldErrors) apiErrorMessage = fieldErrors;
+      }
       toast.error(`Registration error: ${apiErrorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const executeGoogleLogin = async (googleData: { name: string; email: string; googleId: string; avatar?: string; role?: string }) => {
+  const executeGoogleLogin = async (googleData: { name: string; email: string; googleId?: string; avatar?: string; role?: string }) => {
     if (typeof loginWithGoogle === 'function') {
       return await loginWithGoogle(googleData);
     }
@@ -346,7 +338,7 @@ export const Signup: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               floatingLabel
-              label="First Name"
+              label="Full Name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -371,11 +363,11 @@ export const Signup: React.FC = () => {
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-3 text-xs font-semibold text-slate-200 outline-none focus:border-primary-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-3 text-xs font-semibold text-slate-200 outline-none focus:border-primary-500 cursor-pointer"
               >
-                <option value="Admin">Admin</option>
                 <option value="Pharmacist">Pharmacist</option>
                 <option value="Staff">Staff</option>
+                <option value="Supplier">Supplier</option>
               </select>
             </div>
 
@@ -414,9 +406,8 @@ export const Signup: React.FC = () => {
                   {[1, 2, 3, 4].map((step) => (
                     <div
                       key={step}
-                      className={`h-full flex-1 rounded-full transition-all ${
-                        strength.score >= step ? strength.color : 'bg-slate-800'
-                      }`}
+                      className={`h-full flex-1 rounded-full transition-all ${strength.score >= step ? strength.color : 'bg-slate-800'
+                        }`}
                     />
                   ))}
                 </div>

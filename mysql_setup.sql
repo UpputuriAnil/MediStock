@@ -1,3 +1,4 @@
+
 -- MediStock MySQL Database Setup Script
 -- Run this in MySQL Workbench to create the database and sample data
 
@@ -106,7 +107,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version BIGINT DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_token (token),
+    INDEX idx_token (token(255)),
     INDEX idx_user_id (user_id),
     INDEX idx_expiry_date (expiry_date),
     INDEX idx_revoked (revoked)
@@ -330,11 +331,13 @@ CREATE TABLE IF NOT EXISTS medicines (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     generic_name VARCHAR(200),
+    brand_name VARCHAR(200),
     description TEXT,
     category VARCHAR(100),
     dosage_form VARCHAR(50),
     strength VARCHAR(50),
     manufacturer VARCHAR(200),
+    supplier VARCHAR(200),
     barcode VARCHAR(100),
     ndc_code VARCHAR(50),
     storage_conditions VARCHAR(200),

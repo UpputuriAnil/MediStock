@@ -2,6 +2,8 @@ export interface Medicine {
   id: string;
   name: string;
   genericName: string;
+  brandName?: string;
+  manufacturer?: string;
   category: string;
   supplier: string;
   stock: number;
@@ -13,6 +15,7 @@ export interface Medicine {
   manufactureDate: string;
   location: string;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Near Expiry' | 'Expired';
+  reorderLevel?: number;
   imageUrl?: string;
   description?: string;
 }

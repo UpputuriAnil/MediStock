@@ -140,6 +140,10 @@ public class User {
         this.lastName = lastName;
     }
 
+    public String getName() {
+        return (firstName != null ? firstName : "") + (lastName != null ? " " + lastName : "");
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }

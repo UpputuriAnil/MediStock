@@ -95,6 +95,6 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> errorWithPath(String error, String path) {
-        return new ApiResponse<>(false, null, null, error, LocalDateTime.now(), path);
+        return new ApiResponse<>(false, error, null, error, LocalDateTime.now(), path);
     }
 }

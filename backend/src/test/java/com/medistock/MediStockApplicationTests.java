@@ -1,10 +1,12 @@
-package com.medical_inventory.medical_invetory;
+package com.medistock;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-class MedicalInvetoryApplicationTests {
+@ActiveProfiles("test")
+class MediStockApplicationTests {
 
 	@Test
 	void contextLoads() {

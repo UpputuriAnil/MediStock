@@ -10,5 +10,6 @@ export interface Supplier {
   activeOrders: number;
   totalSupplied: number;
   status: 'Preferred' | 'Active' | 'Under Review';
+  city?: string;
   rating: number;
 }

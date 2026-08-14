@@ -77,4 +77,11 @@ public class AuthController {
         authService.verifyEmail(token);
         return ResponseEntity.ok(ApiResponse.success("Email verified successfully"));
     }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get authenticated user profile")
+    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser(@RequestHeader("Authorization") String token) {
+        AuthResponse.UserDto user = authService.getCurrentUser(token);
+        return ResponseEntity.ok(ApiResponse.success(user));
+    }
 }

@@ -112,7 +112,15 @@ public class AuthServiceImpl implements AuthService {
         }
 
         final String selectedRoleName = targetRoleName;
-        Role assignedRole = roleRepository.findActiveByName(selectedRoleName)
+        Role assignedRole = roleRepository.findByName(selectedRoleName)
+                .map(existingRole -> {
+                    if (Boolean.TRUE.equals(existingRole.getDeleted())) {
+                        existingRole.setDeleted(false);
+                        existingRole.setDeletedAt(null);
+                        return roleRepository.save(existingRole);
+                    }
+                    return existingRole;
+                })
                 .orElseGet(() -> {
                     Role newRole = new Role();
                     newRole.setName(selectedRoleName);
@@ -192,7 +200,15 @@ public class AuthServiceImpl implements AuthService {
             }
 
             final String selectedRoleName = targetRoleName;
-            Role defaultRole = roleRepository.findActiveByName(selectedRoleName)
+            Role defaultRole = roleRepository.findByName(selectedRoleName)
+                    .map(existingRole -> {
+                        if (Boolean.TRUE.equals(existingRole.getDeleted())) {
+                            existingRole.setDeleted(false);
+                            existingRole.setDeletedAt(null);
+                            return roleRepository.save(existingRole);
+                        }
+                        return existingRole;
+                    })
                     .orElseGet(() -> {
                         Role newRole = new Role();
                         newRole.setName(selectedRoleName);
@@ -372,6 +388,42 @@ public class AuthServiceImpl implements AuthService {
         verificationToken.setVerified(true);
         verificationToken.setVerifiedAt(LocalDateTime.now());
         emailVerificationTokenRepository.save(verificationToken);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse.UserDto getCurrentUser(String token) {
+        if (token != null && token.startsWith(SecurityConstants.JWT_PREFIX)) {
+            token = token.substring(SecurityConstants.JWT_PREFIX.length());
+        }
+
+        if (!jwtUtil.validateToken(token)) {
+            throw new InvalidTokenException("Invalid or expired JWT token");
+        }
+
+        String email = jwtUtil.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        Set<String> roles = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(java.util.stream.Collectors.toSet());
+
+        Set<String> permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream() : java.util.stream.Stream.empty())
+                .map(permission -> permission.getName())
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new AuthResponse.UserDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhoneNumber(),
+                user.getEmailVerified(),
+                roles,
+                permissions
+        );
     }
 
     private void saveRefreshToken(User user, String token) {

@@ -1,6 +1,10 @@
 package com.medistock.service.impl;
 
+import com.medistock.entity.Inventory;
+import com.medistock.entity.Medicine;
 import com.medistock.entity.Supplier;
+import com.medistock.repository.InventoryRepository;
+import com.medistock.repository.MedicineRepository;
 import com.medistock.repository.SupplierRepository;
 import com.medistock.service.SupplierService;
 import org.springframework.stereotype.Service;
@@ -13,9 +17,15 @@ import java.util.List;
 public class SupplierServiceImpl implements SupplierService {
 
     private final SupplierRepository supplierRepository;
+    private final MedicineRepository medicineRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public SupplierServiceImpl(SupplierRepository supplierRepository) {
+    public SupplierServiceImpl(SupplierRepository supplierRepository,
+                               MedicineRepository medicineRepository,
+                               InventoryRepository inventoryRepository) {
         this.supplierRepository = supplierRepository;
+        this.medicineRepository = medicineRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Override
@@ -59,6 +69,33 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     public List<Supplier> searchSuppliers(String keyword) {
         return supplierRepository.searchSuppliers(keyword);
+    }
+
+    @Override
+    public List<Medicine> getMedicinesBySupplier(Long supplierId) {
+        // Ensure supplier exists
+        getSupplierById(supplierId);
+        return inventoryRepository.findMedicinesBySupplierId(supplierId);
+    }
+
+    @Override
+    public void linkSupplierToMedicine(Long supplierId, Long medicineId) {
+        Supplier supplier = getSupplierById(supplierId);
+        Medicine medicine = medicineRepository.findByIdAndDeletedFalse(medicineId)
+                .orElseThrow(() -> new RuntimeException("Medicine not found with id: " + medicineId));
+
+        List<Medicine> existingMedicines = inventoryRepository.findMedicinesBySupplierId(supplierId);
+        boolean alreadyLinked = existingMedicines.stream().anyMatch(m -> m.getId().equals(medicineId));
+
+        if (!alreadyLinked) {
+            Inventory inventoryLink = new Inventory();
+            inventoryLink.setSupplier(supplier);
+            inventoryLink.setMedicine(medicine);
+            inventoryLink.setQuantity(0);
+            inventoryLink.setAvailable(true);
+            inventoryLink.setNotes("Linked supplier: " + supplier.getName());
+            inventoryRepository.save(inventoryLink);
+        }
     }
 
     @Override

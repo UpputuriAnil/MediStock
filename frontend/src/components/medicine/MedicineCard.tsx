@@ -5,6 +5,9 @@ import { Medicine } from '../../types/inventory';
 import { Badge } from '../common/Badge';
 import { formatCurrency, getExpiryStatus } from '../../utils/formatters';
 
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../hooks/useRole';
+
 interface MedicineCardProps {
   medicine: Medicine;
   onView: (med: Medicine) => void;
@@ -18,10 +21,34 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { user } = useAuth();
+  const { isSupplier } = useRole();
+  const userRoleStr = (user?.role || (user as any)?.roles?.[0] || 'Staff').toLowerCase();
+  const isAdmin = userRoleStr.includes('admin');
+  const isPharmacist = userRoleStr.includes('pharm');
+  const canEdit = isAdmin || isPharmacist;
+  const canDelete = isAdmin;
+
   const [showMenu, setShowMenu] = React.useState(false);
   const expiryInfo = getExpiryStatus(medicine.expiryDate);
 
   const getStatusBadge = (status: Medicine['status']) => {
+    if (isSupplier) {
+      switch (status) {
+        case 'In Stock':
+          return <Badge variant="success" dot>Delivered</Badge>;
+        case 'Low Stock':
+        case 'Out of Stock':
+          return <Badge variant="primary" dot>Out for Delivery</Badge>;
+        case 'Near Expiry':
+          return <Badge variant="warning" dot>Near Expiry</Badge>;
+        case 'Expired':
+          return <Badge variant="danger" dot>Expired</Badge>;
+        default:
+          return <Badge variant="success" dot>Delivered</Badge>;
+      }
+    }
+
     switch (status) {
       case 'In Stock':
         return <Badge variant="success" dot>In Stock</Badge>;
@@ -71,18 +98,22 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                 >
                   <Eye className="w-3.5 h-3.5" /> View Details
                 </button>
-                <button
-                  onClick={() => { setShowMenu(false); onEdit(medicine); }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <Edit3 className="w-3.5 h-3.5" /> Edit Record
-                </button>
-                <button
-                  onClick={() => { setShowMenu(false); onDelete(medicine.id); }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/40"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => { setShowMenu(false); onEdit(medicine); }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit Record
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => { setShowMenu(false); onDelete(medicine.id); }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                )}
               </div>
             )}
           </div>

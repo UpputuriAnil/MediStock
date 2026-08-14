@@ -24,7 +24,7 @@ export const CategoryChart: React.FC = () => {
           Medicine Categories Breakdown
         </h3>
         <p className="text-xs text-slate-400 mt-0.5">
-          Distribution of stored items by therapeutic category
+          Distribution of stored items by medicine category
         </p>
       </div>
 

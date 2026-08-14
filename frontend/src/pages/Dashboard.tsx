@@ -1,16 +1,38 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AdminDashboardView } from '../components/dashboard/AdminDashboardView';
-import { PharmacistDashboardView } from '../components/dashboard/PharmacistDashboardView';
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const userRoleStr = (user?.role || (user as any)?.roles?.[0] || '').toLowerCase();
-  const isAdmin = userRoleStr.includes('admin');
+  const { user, isAuthenticated } = useAuth();
 
-  if (isAdmin) {
-    return <AdminDashboardView />;
+  const savedUserRaw = localStorage.getItem('medistock_user') || sessionStorage.getItem('medistock_user');
+  let activeUser: any = user;
+  if (savedUserRaw && savedUserRaw !== 'undefined' && savedUserRaw !== 'null') {
+    try {
+      activeUser = JSON.parse(savedUserRaw);
+    } catch (e) {}
   }
 
-  return <PharmacistDashboardView />;
+  if (!isAuthenticated && !activeUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const rawRole = String(activeUser?.role || activeUser?.roles?.[0] || user?.role || '').toLowerCase();
+  const email = (activeUser?.email || user?.email || '').toLowerCase();
+
+  if (rawRole.includes('admin') || email === 'admin@medistock.com') {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+
+  if (rawRole.includes('supplier') || email.includes('supplier')) {
+    return <Navigate to="/supplier-dashboard" replace />;
+  }
+
+  if (rawRole.includes('staff') || email === 'staff@medistock.com') {
+    return <Navigate to="/staff-dashboard" replace />;
+  }
+
+  return <Navigate to="/pharmacist-dashboard" replace />;
 };
+
+export default Dashboard;

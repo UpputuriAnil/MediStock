@@ -102,9 +102,13 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
+        String combinedMessage = errors.values().stream()
+                .distinct()
+                .collect(Collectors.joining(". "));
+
         ApiResponse<Map<String, String>> response = new ApiResponse<>();
         response.setSuccess(false);
-        response.setMessage("Validation failed");
+        response.setMessage(combinedMessage.isEmpty() ? "Validation failed" : combinedMessage);
         response.setData(errors);
         response.setTimestamp(LocalDateTime.now());
         response.setPath(request.getDescription(false).replace("uri=", ""));
@@ -128,6 +132,22 @@ public class GlobalExceptionHandler {
         response.setTimestamp(LocalDateTime.now());
         response.setPath(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(
+            org.springframework.dao.DataIntegrityViolationException ex, WebRequest request) {
+        String msg = "Database constraint violation occurred";
+        if (ex.getCause() != null && ex.getCause().getMessage() != null) {
+            String causeMsg = ex.getCause().getMessage();
+            if (causeMsg.toLowerCase().contains("duplicate") || causeMsg.toLowerCase().contains("unique")) {
+                msg = "A user account or role with these details already exists in the database.";
+            } else {
+                msg = causeMsg;
+            }
+        }
+        ApiResponse<Void> response = ApiResponse.errorWithPath(msg, request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
