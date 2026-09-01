@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: medistock-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: medistock
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql_setup.sql:/docker-entrypoint-initdb.d/mysql_setup.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medistock-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/medistock?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      APP_JWT_SECRET: 9a2f4c8e7b1d3f5a6c8e9b0d2f4a6c8e1d3f5a7b9c0d2e4f6a8b0c2d4e6f8a0b
+      RAZORPAY_KEY_ID: rzp_test_TWnNPQvPZhc3Y3
+      RAZORPAY_KEY_SECRET: YOUR_RAZORPAY_KEY_SECRET
+    depends_on:
+      - mysqldb
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080/api
+        VITE_RAZORPAY_KEY_ID: rzp_test_TWnNPQvPZhc3Y3
+    container_name: medistock-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
