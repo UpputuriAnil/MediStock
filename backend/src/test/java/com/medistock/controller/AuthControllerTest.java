@@ -133,7 +133,7 @@ class AuthControllerTest {
 
     @Test
     void testLogoutSuccess() throws Exception {
-        doNothing().when(authService).logout("Bearer mock-token");
+        doNothing().when(authService).logout("mock-token");
 
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", "Bearer mock-token"))
@@ -144,7 +144,7 @@ class AuthControllerTest {
 
     @Test
     void testGetCurrentUserSuccess() throws Exception {
-        when(authService.getCurrentUser("Bearer mock-token")).thenReturn(mockUserDto);
+        when(authService.getCurrentUser("mock-token")).thenReturn(mockUserDto);
 
         mockMvc.perform(get("/auth/me")
                         .header("Authorization", "Bearer mock-token"))

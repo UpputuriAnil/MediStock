@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Pill, Users, Truck, ShoppingBag, FileText, ArrowRight, X } from 'lucide-react';
+import { Search, Pill, Users, Truck, ShoppingBag, FileText, ArrowRight, X, Code2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../../context/InventoryContext';
 
@@ -37,7 +37,11 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
   ).slice(0, 3);
 
   const handleSelect = (path: string) => {
-    navigate(path);
+    if (path.startsWith('http')) {
+      window.open(path, '_blank');
+    } else {
+      navigate(path);
+    }
     onClose();
   };
 
@@ -92,6 +96,7 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
                     { label: 'Suppliers Directory', icon: Truck, path: '/suppliers' },
                     { label: 'Purchase Orders', icon: ShoppingBag, path: '/purchase-orders' },
                     { label: 'System Users', icon: Users, path: '/users' },
+                    { label: 'Swagger API Explorer', icon: Code2, path: 'http://localhost:8080/api/swagger-ui/index.html', external: true },
                   ].map((nav) => (
                     <button
                       key={nav.path}

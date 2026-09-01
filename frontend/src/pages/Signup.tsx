@@ -7,7 +7,7 @@ import { Button } from '../components/common/Button';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-import axios from 'axios';
+import api from '../services/api';
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -121,7 +121,7 @@ export const Signup: React.FC = () => {
     }
 
     try {
-      const res = await axios.post('/api/auth/google', {
+      const res = await api.post('/auth/google', {
         email: googleData.email,
         name: googleData.name,
         googleId: googleData.googleId,

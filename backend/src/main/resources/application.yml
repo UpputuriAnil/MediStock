@@ -112,3 +112,8 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/medistock.log
+
+# Razorpay Configuration
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:rzp_test_medistock_key_2026}
+  key-secret: ${RAZORPAY_KEY_SECRET:your_razorpay_secret_key_here}

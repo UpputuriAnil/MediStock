@@ -3,6 +3,7 @@ import { User } from '../types/user';
 import { MOCK_USER } from '../services/mockData';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import { formatNameFromEmail } from '../utils/formatters';
 
 interface AuthContextType {
@@ -120,6 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
       localStorage.setItem('user', JSON.stringify(loggedUser));
       localStorage.setItem('medistock_remember_me', 'true');
+      if (!localStorage.getItem('accessToken')) {
+        localStorage.setItem('accessToken', `demo_token_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
+      }
     } else {
       localStorage.removeItem('medistock_user');
       localStorage.removeItem('user');
@@ -133,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const targetPassword = (password || '').trim() || 'Admin@123';
 
     try {
-      const res = await axios.post('/api/auth/login', {
+      const res = await api.post('/auth/login', {
         email: targetEmail,
         password: targetPassword,
       });
@@ -273,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('medistock_last_registered_email', email);
 
     try {
-      const res = await axios.post('/api/auth/register', {
+      const res = await api.post('/auth/register', {
         email,
         password: pwd,
         confirmPassword: pwd,
@@ -327,7 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
 
     try {
-      const res = await axios.post('/api/auth/google', {
+      const res = await api.post('/auth/google', {
         email: userEmail,
         name: userName,
         googleId,
@@ -384,7 +388,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Attempt backend logout if token exists
     const token = localStorage.getItem('accessToken');
     if (token) {
-      axios.post('/api/auth/logout', {}, { headers: { Authorization: `Bearer ${token}` } }).catch(() => { });
+      api.post('/auth/logout').catch(() => { });
     }
 
     setUser(null);
@@ -444,15 +448,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Attempt backend database update if available
-    const token = localStorage.getItem('accessToken');
-    axios.put('/api/users/profile', {
+    api.put('/users/profile', {
       id: updated.id,
       name: updated.name,
       email: updated.email,
       phoneNumber: updated.phone,
       department: updated.department,
-    }, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
     }).catch(() => {});
 
     toast.success('Profile updated successfully in system & database!');

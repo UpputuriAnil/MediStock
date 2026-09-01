@@ -37,8 +37,14 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        return generateAccessToken(user);
+        if (authentication.getPrincipal() instanceof User) {
+            return generateAccessToken((User) authentication.getPrincipal());
+        }
+        if (authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
+            org.springframework.security.core.userdetails.UserDetails ud = (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+            return generateTokenFromEmail(ud.getUsername());
+        }
+        return generateTokenFromEmail(authentication.getName());
     }
 
     public String generateAccessToken(User user) {

@@ -18,6 +18,12 @@ export interface Medicine {
   reorderLevel?: number;
   imageUrl?: string;
   description?: string;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  paymentStatus?: 'PAID' | 'PENDING' | 'FAILED';
+  paymentAmount?: number;
+  paymentMethod?: string;
+  paymentDate?: string;
 }
 
 export interface Category {

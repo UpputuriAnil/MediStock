@@ -185,7 +185,7 @@ const buildInventoryAlerts = (): NotificationItem[] => {
   try {
     const raw = localStorage.getItem('medistock_medicines');
     if (raw) medList = JSON.parse(raw);
-  } catch (e) {}
+  } catch (e) { }
 
   if (!Array.isArray(medList) || medList.length === 0) {
     medList = MOCK_MEDICINES;
@@ -273,7 +273,7 @@ const getStoredNotifications = (roleKey: string, fallback: NotificationItem[]): 
         return [...mergedDynamic, ...customStored];
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const fallbackIds = new Set(fallback.map((f) => f.id));
   const uniqueDynamic = dynamicAlerts.filter((a) => !fallbackIds.has(a.id));
@@ -283,7 +283,7 @@ const getStoredNotifications = (roleKey: string, fallback: NotificationItem[]): 
 const setStoredNotifications = (roleKey: string, items: NotificationItem[]) => {
   try {
     localStorage.setItem(`medistock_notifications_${roleKey}`, JSON.stringify(items));
-  } catch (e) {}
+  } catch (e) { }
 };
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);

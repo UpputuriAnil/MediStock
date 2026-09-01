@@ -30,19 +30,19 @@ const inventoryService = {
   getInventoryBySupplier: (supplierId) => api.get(`/inventory/supplier/${supplierId}`),
   getExpiringStock: (date) => api.get('/inventory/expiring', { params: { date } }),
   getTotalStockByMedicine: (medicineId) => api.get(`/inventory/medicine/${medicineId}/total`),
-  addStock: (id, quantity, performedBy, reason) => api.post(`/inventory/${id}/add-stock`, null, { 
-    params: { quantity, performedBy, reason } 
+  addStock: (id, quantity, performedBy, reason) => api.post(`/inventory/${id}/add-stock`, null, {
+    params: { quantity, performedBy, reason }
   }),
-  removeStock: (id, quantity, performedBy, reason) => api.post(`/inventory/${id}/remove-stock`, null, { 
-    params: { quantity, performedBy, reason } 
+  removeStock: (id, quantity, performedBy, reason) => api.post(`/inventory/${id}/remove-stock`, null, {
+    params: { quantity, performedBy, reason }
   }),
 
   // Stock Log APIs
   getAllStockLogs: () => api.get('/stock-logs'),
   getStockLogsByMedicine: (medicineId) => api.get(`/stock-logs/medicine/${medicineId}`),
   getStockLogsByInventory: (inventoryId) => api.get(`/stock-logs/inventory/${inventoryId}`),
-  getStockLogsByDateRange: (startDate, endDate) => api.get('/stock-logs/date-range', { 
-    params: { startDate, endDate } 
+  getStockLogsByDateRange: (startDate, endDate) => api.get('/stock-logs/date-range', {
+    params: { startDate, endDate }
   }),
 };
 

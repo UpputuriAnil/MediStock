@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 73ad2386-db1d-419a-8081-789f5547e1e1
+
+localResources:
+  collections:
+    - ../MediStock_Postman_Collection.json

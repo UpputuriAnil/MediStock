@@ -8,7 +8,7 @@ import { Modal } from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-import axios from 'axios';
+import api from '../services/api';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export const Login: React.FC = () => {
     }
 
     try {
-      const res = await axios.post('/api/auth/google', {
+      const res = await api.post('/auth/google', {
         email: googleData.email,
         name: googleData.name,
         googleId: googleData.googleId,

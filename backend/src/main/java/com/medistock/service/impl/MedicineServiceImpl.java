@@ -31,7 +31,7 @@ public class MedicineServiceImpl implements MedicineService {
     public Medicine updateMedicine(Long id, Medicine medicine) {
         Medicine existingMedicine = medicineRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Medicine not found with id: " + id));
-        
+
         existingMedicine.setName(medicine.getName());
         existingMedicine.setGenericName(medicine.getGenericName());
         existingMedicine.setDescription(medicine.getDescription());
@@ -50,7 +50,7 @@ public class MedicineServiceImpl implements MedicineService {
         existingMedicine.setControlledSubstance(medicine.getControlledSubstance());
         existingMedicine.setScheduleNumber(medicine.getScheduleNumber());
         existingMedicine.setNotes(medicine.getNotes());
-        
+
         return medicineRepository.save(existingMedicine);
     }
 

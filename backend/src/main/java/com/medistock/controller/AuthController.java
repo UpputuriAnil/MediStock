@@ -45,7 +45,15 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
-    public ResponseEntity<ApiResponse<Void>> logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Missing or invalid Authorization header"));
+        }
+
+        String token = authHeader.substring(7);
         authService.logout(token);
         return ResponseEntity.ok(ApiResponse.success("Logout successful"));
     }
@@ -80,7 +88,15 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get authenticated user profile")
-    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Missing or invalid Authorization header"));
+        }
+
+        String token = authHeader.substring(7);
         AuthResponse.UserDto user = authService.getCurrentUser(token);
         return ResponseEntity.ok(ApiResponse.success(user));
     }

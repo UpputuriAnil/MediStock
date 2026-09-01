@@ -39,21 +39,19 @@ export const ExpiryTracking: React.FC = () => {
         <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('timeline')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-              activeTab === 'timeline'
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${activeTab === 'timeline'
                 ? 'bg-white dark:bg-slate-900 text-primary-600 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
+              }`}
           >
             <Clock className="w-3.5 h-3.5" /> Timeline View
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-              activeTab === 'calendar'
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${activeTab === 'calendar'
                 ? 'bg-white dark:bg-slate-900 text-primary-600 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
+              }`}
           >
             <CalendarIcon className="w-3.5 h-3.5" /> Calendar View
           </button>
@@ -197,11 +195,10 @@ export const ExpiryTracking: React.FC = () => {
               return (
                 <div
                   key={day}
-                  className={`h-20 rounded-xl border p-2 flex flex-col justify-between text-xs font-semibold ${
-                    hasAlert
+                  className={`h-20 rounded-xl border p-2 flex flex-col justify-between text-xs font-semibold ${hasAlert
                       ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300'
                       : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                  }`}
+                    }`}
                 >
                   <span className="text-[11px] font-bold">{day}</span>
                   {hasAlert && (

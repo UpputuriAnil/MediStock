@@ -11,6 +11,7 @@ import {
 } from '../services/mockData';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import api from '../services/api';
 
 interface InventoryContextType {
   medicines: Medicine[];
@@ -74,7 +75,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Sync initial suppliers with backend database if running
   useEffect(() => {
-    axios.get('/api/suppliers')
+    api.get('/suppliers')
       .then((res) => {
         if (res.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
           const backendSups: Supplier[] = res.data.data.map((s: any) => ({
@@ -111,7 +112,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setStored('medistock_suppliers', updated);
       return updated;
     });
-    axios.delete(`/api/suppliers/${id}`).catch(() => {});
+    api.delete(`/suppliers/${id}`).catch(() => {});
     toast.success('Supplier removed successfully');
   };
 
@@ -128,6 +129,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return updated;
     });
 
+    const paymentLogSuffix = newMed.razorpayPaymentId
+      ? ` (Paid via Razorpay: ${newMed.razorpayPaymentId})`
+      : '';
+
     // Add log entry
     const newLog: StockLog = {
       id: `LOG-${Date.now().toString().slice(-4)}`,
@@ -139,14 +144,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       newStock: newMed.stock,
       performedBy: 'Current User',
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      reason: 'Initial medicine entry added to database',
+      reason: `Initial medicine entry added to database${paymentLogSuffix}`,
     };
     setStockLogs((prev) => {
       const updated = [newLog, ...prev];
       setStored('medistock_stock_logs', updated);
       return updated;
     });
-    toast.success(`Medicine "${newMed.name}" created successfully!`);
+
+    if (newMed.razorpayPaymentId) {
+      toast.success(`Medicine "${newMed.name}" registered & Paid via Razorpay (${newMed.razorpayPaymentId})!`);
+    } else {
+      toast.success(`Medicine "${newMed.name}" created successfully!`);
+    }
   };
 
   const updateMedicine = (id: string, updated: Partial<Medicine>) => {
@@ -208,7 +218,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     try {
-      await axios.post('/api/suppliers', {
+      await api.post('/suppliers', {
         name: newSup.name,
         contactPerson: newSup.contactPerson,
         email: newSup.email,

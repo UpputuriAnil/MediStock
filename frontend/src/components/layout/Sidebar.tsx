@@ -192,6 +192,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </NavLink>
             );
           })}
+
+
         </div>
 
         {/* User Footer Profile & Logout */}

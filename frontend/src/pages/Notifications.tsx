@@ -155,19 +155,24 @@ export const Notifications: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  {!n.read && (
+                <div className="flex items-center gap-2 shrink-0">
+                  {!n.read ? (
                     <button
                       onClick={() => markAsRead(n.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/80 dark:hover:bg-primary-900 text-primary-600 dark:text-primary-300 text-xs font-bold transition-all border border-primary-200 dark:border-primary-700/60 flex items-center gap-1.5 shadow-xs"
                       title="Mark as read"
                     >
-                      <CheckCheck className="w-4 h-4" />
+                      <CheckCheck className="w-3.5 h-3.5 text-primary-500" />
+                      <span>Mark as read</span>
                     </button>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-[11px] font-semibold flex items-center gap-1">
+                      <CheckCheck className="w-3 h-3 text-emerald-500" /> Read
+                    </span>
                   )}
                   <button
                     onClick={() => deleteNotification(n.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-danger-500 hover:bg-danger-50 transition-colors"
+                    className="p-2 rounded-xl text-slate-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-950/40 transition-colors"
                     title="Delete notification"
                   >
                     <Trash2 className="w-4 h-4" />

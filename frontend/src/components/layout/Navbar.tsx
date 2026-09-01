@@ -104,6 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
             </kbd>
           </button>
 
+
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}
@@ -172,15 +173,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMobileMenu }) => {
                             }`}
                         >
                           <div className="flex items-center justify-between font-bold mb-1">
-                            <span className="flex items-center gap-1.5">
+                            <span className="flex items-center gap-1.5 truncate">
                               {n.type === 'alert' ? (
-                                <AlertTriangle className="w-3.5 h-3.5 text-danger-500" />
+                                <AlertTriangle className="w-3.5 h-3.5 text-danger-500 shrink-0" />
                               ) : (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-success-500" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-success-500 shrink-0" />
                               )}
-                              {n.title}
+                              <span className="truncate">{n.title}</span>
                             </span>
-                            <span className="text-[10px] text-slate-400">{n.timestamp}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {!n.read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(n.id);
+                                  }}
+                                  className="text-[10px] px-2 py-0.5 rounded-lg bg-primary-100 dark:bg-primary-900/80 text-primary-700 dark:text-primary-300 font-bold hover:bg-primary-200 transition-colors"
+                                  title="Mark as read"
+                                >
+                                  Mark read
+                                </button>
+                              )}
+                              <span className="text-[10px] text-slate-400">{n.timestamp}</span>
+                            </div>
                           </div>
                           <p className="text-slate-600 dark:text-slate-400 line-clamp-2">{n.message}</p>
                         </div>

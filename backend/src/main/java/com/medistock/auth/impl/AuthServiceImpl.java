@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -241,14 +242,14 @@ public class AuthServiceImpl implements AuthService {
                     .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
 
             // Generate tokens
-            String accessToken = jwtUtil.generateAccessToken(authentication);
+            String accessToken = jwtUtil.generateAccessToken(user);
             String refreshToken = jwtUtil.generateRefreshToken(user);
-
-            // Save refresh token
-            saveRefreshToken(user, refreshToken);
 
             // Revoke old refresh tokens
             revokeOldRefreshTokens(user);
+
+            // Save refresh token
+            saveRefreshToken(user, refreshToken);
 
             return buildAuthResponse(accessToken, refreshToken, user);
         } catch (Exception e) {
@@ -265,12 +266,32 @@ public class AuthServiceImpl implements AuthService {
             token = token.substring(SecurityConstants.JWT_PREFIX.length());
         }
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+        if (token == null || token.trim().isEmpty()) {
+            return;
+        }
 
-        refreshToken.setRevoked(true);
-        refreshToken.setRevokedAt(LocalDateTime.now());
-        refreshTokenRepository.save(refreshToken);
+        // 1. Try finding and revoking as a refresh token
+        Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByToken(token);
+        if (refreshTokenOpt.isPresent()) {
+            RefreshToken refreshToken = refreshTokenOpt.get();
+            refreshToken.setRevoked(true);
+            refreshToken.setRevokedAt(LocalDateTime.now());
+            refreshTokenRepository.save(refreshToken);
+            return;
+        }
+
+        // 2. If an Access Token (JWT) was passed, extract user and revoke all active refresh tokens for the user
+        try {
+            if (jwtUtil.validateToken(token)) {
+                String email = jwtUtil.getEmailFromToken(token);
+                User user = userRepository.findByEmail(email).orElse(null);
+                if (user != null) {
+                    revokeOldRefreshTokens(user);
+                }
+            }
+        } catch (Exception e) {
+            // Ignore token parse errors on logout
+        }
     }
 
     @Override
