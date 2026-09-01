@@ -103,8 +103,8 @@ medical_inventory/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/springboardmentor63053m-art/Medical-Inventory-Platform.git
-cd Medical-Inventory-Platform
+git clone https://github.com/UpputuriAnil/MediStock.git
+cd MediStock
 ```
 
 ---
