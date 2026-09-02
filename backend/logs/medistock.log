@@ -45,3 +45,244 @@
 2026-09-02 14:58:21 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
 2026-09-02 14:58:21 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
 2026-09-02 14:58:21 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:07:27 [main] INFO  com.medistock.MediStockApplication - Starting MediStockApplication using Java 23.0.1 with PID 2844 (C:\medical_inventory\backend\target\classes started by anilu in C:\medical_inventory\backend)
+2026-09-02 21:07:27 [main] DEBUG com.medistock.MediStockApplication - Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-09-02 21:07:27 [main] INFO  com.medistock.MediStockApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-02 21:07:30 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-02 21:07:30 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 382 ms. Found 15 JPA repository interfaces.
+2026-09-02 21:07:34 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-09-02 21:07:35 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-02 21:07:35 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-09-02 21:07:35 [main] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring embedded WebApplicationContext
+2026-09-02 21:07:35 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 7575 ms
+2026-09-02 21:07:36 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-02 21:07:36 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-09-02 21:07:36 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-09-02 21:07:37 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-02 21:07:37 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-02 21:07:37 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2bb3f39e
+2026-09-02 21:07:37 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-02 21:07:45 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-02 21:07:46 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-02 21:07:47 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-02 21:07:50 [main] DEBUG c.m.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-09-02 21:07:54 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@73226368, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@501f21fe, org.springframework.security.web.context.SecurityContextHolderFilter@89ebacd, org.springframework.security.web.header.HeaderWriterFilter@814fbee, org.springframework.web.filter.CorsFilter@78aa11f2, org.springframework.security.web.authentication.logout.LogoutFilter@7788921d, com.medistock.security.JwtAuthenticationFilter@7e5c04a4, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6b907f80, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3d6d5694, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@7c57c200, org.springframework.security.web.session.SessionManagementFilter@4bc1a53c, org.springframework.security.web.access.ExceptionTranslationFilter@1722c1fa, org.springframework.security.web.access.intercept.AuthorizationFilter@798b52a0]
+2026-09-02 21:07:55 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api'
+2026-09-02 21:07:55 [main] INFO  com.medistock.MediStockApplication - Started MediStockApplication in 30.135 seconds (process running for 31.2)
+2026-09-02 21:07:56 [main] DEBUG org.hibernate.SQL - 
+    select
+        count(*) 
+    from
+        permissions p1_0
+2026-09-02 21:08:04 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-02 21:08:04 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-02 21:08:04 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-09-02 21:08:04 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing OPTIONS /suppliers
+2026-09-02 21:08:04 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing OPTIONS /suppliers
+2026-09-02 21:08:04 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:08:05 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:05 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:05 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:08:05 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:05 [http-nio-8080-exec-4] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:05 [http-nio-8080-exec-5] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:34 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing OPTIONS /auth/login
+2026-09-02 21:08:34 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing POST /auth/login
+2026-09-02 21:08:34 [http-nio-8080-exec-6] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:34 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured POST /auth/login
+2026-09-02 21:08:35 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.is_account_non_expired,
+        u1_0.is_account_non_locked,
+        u1_0.created_at,
+        u1_0.created_by,
+        u1_0.is_credentials_non_expired,
+        u1_0.deleted,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.email_verified,
+        u1_0.is_enabled,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.oauth_provider,
+        u1_0.oauth_provider_id,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.profile_picture_url,
+        u1_0.updated_at,
+        u1_0.updated_by,
+        u1_0.version 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+        and u1_0.deleted=0
+2026-09-02 21:08:35 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        evt1_0.id,
+        evt1_0.created_at,
+        evt1_0.expiry_date,
+        evt1_0.token,
+        evt1_0.updated_at,
+        evt1_0.user_id,
+        evt1_0.verified,
+        evt1_0.verified_at,
+        evt1_0.version 
+    from
+        email_verification_tokens evt1_0 
+    where
+        evt1_0.user_id=?
+2026-09-02 21:08:35 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        prt1_0.id,
+        prt1_0.created_at,
+        prt1_0.expiry_date,
+        prt1_0.token,
+        prt1_0.updated_at,
+        prt1_0.used,
+        prt1_0.used_at,
+        prt1_0.user_id,
+        prt1_0.version 
+    from
+        password_reset_tokens prt1_0 
+    where
+        prt1_0.user_id=?
+2026-09-02 21:08:35 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        r1_0.user_id,
+        r1_1.id,
+        r1_1.created_at,
+        r1_1.created_by,
+        r1_1.deleted,
+        r1_1.deleted_at,
+        r1_1.description,
+        r1_1.name,
+        p1_0.role_id,
+        p1_1.id,
+        p1_1.category,
+        p1_1.created_at,
+        p1_1.created_by,
+        p1_1.deleted,
+        p1_1.deleted_at,
+        p1_1.description,
+        p1_1.name,
+        p1_1.updated_at,
+        p1_1.updated_by,
+        p1_1.version,
+        r1_1.updated_at,
+        r1_1.updated_by,
+        r1_1.version 
+    from
+        user_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.role_id 
+    left join
+        role_permissions p1_0 
+            on r1_1.id=p1_0.role_id 
+    left join
+        permissions p1_1 
+            on p1_1.id=p1_0.permission_id 
+    where
+        r1_0.user_id=?
+2026-09-02 21:08:35 [http-nio-8080-exec-6] DEBUG o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2026-09-02 21:08:36 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.is_account_non_expired,
+        u1_0.is_account_non_locked,
+        u1_0.created_at,
+        u1_0.created_by,
+        u1_0.is_credentials_non_expired,
+        u1_0.deleted,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.email_verified,
+        u1_0.is_enabled,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.oauth_provider,
+        u1_0.oauth_provider_id,
+        u1_0.password,
+        u1_0.phone_number,
+        u1_0.profile_picture_url,
+        u1_0.updated_at,
+        u1_0.updated_by,
+        u1_0.version 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+        and u1_0.deleted=0
+2026-09-02 21:08:36 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        rt1_0.id,
+        rt1_0.created_at,
+        rt1_0.expiry_date,
+        rt1_0.replaced_by_token,
+        rt1_0.revoked,
+        rt1_0.revoked_at,
+        rt1_0.token,
+        rt1_0.updated_at,
+        rt1_0.user_id,
+        rt1_0.version 
+    from
+        refresh_tokens rt1_0 
+    where
+        rt1_0.user_id=? 
+        and rt1_0.revoked=0
+2026-09-02 21:08:36 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    insert 
+    into
+        refresh_tokens
+        (created_at, expiry_date, replaced_by_token, revoked, revoked_at, token, updated_at, user_id, version) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-09-02 21:08:36 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    update
+        refresh_tokens 
+    set
+        expiry_date=?,
+        replaced_by_token=?,
+        revoked=?,
+        revoked_at=?,
+        token=?,
+        updated_at=?,
+        user_id=?,
+        version=? 
+    where
+        id=? 
+        and version=?
+2026-09-02 21:08:51 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing POST /auth/logout
+2026-09-02 21:08:51 [http-nio-8080-exec-7] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:51 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured POST /auth/logout
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:51 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:08:51 [http-nio-8080-exec-9] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:09:27 [http-nio-8080-exec-2] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /suppliers
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /error
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2026-09-02 21:09:27 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.Http403ForbiddenEntryPoint - Pre-authenticated entry point called. Rejecting access

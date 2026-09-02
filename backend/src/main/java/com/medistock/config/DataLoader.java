@@ -50,11 +50,14 @@ public class DataLoader implements CommandLineRunner {
     }
 
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
         // Check if data already exists
-        if (permissionRepository.count() > 0) {
-            return;
+        try {
+            if (permissionRepository.count() > 0) {
+                return;
+            }
+        } catch (Exception e) {
+            System.out.println("Notice: Database initialization check: " + e.getMessage());
         }
 
         // Create Permissions

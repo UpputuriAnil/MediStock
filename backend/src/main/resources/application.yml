@@ -3,9 +3,9 @@ spring:
     name: medistock
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/medistock?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:@Nil@2004}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:mysql://localhost:3306/medistock?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DATABASE_USERNAME:root}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:@Nil@2004}}
 
   jpa:
     hibernate:
