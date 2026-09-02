@@ -352,56 +352,6 @@ export const Login: React.FC = () => {
             </span>
           </div>
 
-          <div className="mb-4">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">Demo Account Quick Select:</span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => { setEmail('admin@medistock.com'); setPassword('Admin@123'); }}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
-                  email === 'admin@medistock.com'
-                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                }`}
-              >
-                🔑 Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('pharmacist@medistock.com'); setPassword('Pharmacist@123'); }}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
-                  email === 'pharmacist@medistock.com'
-                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                }`}
-              >
-                💊 Pharmacist
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('staff@medistock.com'); setPassword('Staff@123'); }}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
-                  email === 'staff@medistock.com'
-                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                }`}
-              >
-                📋 Staff
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('supplier@medistock.com'); setPassword('Supplier@123'); }}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold text-left transition-all ${
-                  email === 'supplier@medistock.com'
-                    ? 'border-primary-500 bg-primary-950/60 text-primary-300'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                }`}
-              >
-                🚚 Supplier
-              </button>
-            </div>
-          </div>
-
 
 
           <form onSubmit={handleSubmit} className="space-y-5">
