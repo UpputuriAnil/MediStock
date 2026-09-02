@@ -40,8 +40,6 @@ public class DatabaseConfig {
             rawUrl = configuredUrl;
         }
 
-        HikariConfig config = new HikariConfig();
-
         String username = System.getenv("SPRING_DATASOURCE_USERNAME");
         if (username == null || username.isBlank()) username = System.getenv("DATABASE_USERNAME");
         if (username == null || username.isBlank()) username = configuredUsername;
@@ -49,6 +47,34 @@ public class DatabaseConfig {
         String password = System.getenv("SPRING_DATASOURCE_PASSWORD");
         if (password == null || password.isBlank()) password = System.getenv("DATABASE_PASSWORD");
         if (password == null || password.isBlank()) password = configuredPassword;
+
+        // Fallback: Read .env file if available in working directory or parent
+        if (rawUrl == null || rawUrl.isBlank() || rawUrl.contains("localhost:5432")) {
+            try {
+                java.nio.file.Path envPath = java.nio.file.Paths.get(".env");
+                if (!java.nio.file.Files.exists(envPath)) {
+                    envPath = java.nio.file.Paths.get("../.env");
+                }
+                if (java.nio.file.Files.exists(envPath)) {
+                    java.util.List<String> lines = java.nio.file.Files.readAllLines(envPath);
+                    for (String line : lines) {
+                        line = line.trim();
+                        if (line.startsWith("SPRING_DATASOURCE_URL=")) {
+                            rawUrl = line.substring("SPRING_DATASOURCE_URL=".length()).trim();
+                        } else if (line.startsWith("SPRING_DATASOURCE_USERNAME=")) {
+                            username = line.substring("SPRING_DATASOURCE_USERNAME=".length()).trim();
+                        } else if (line.startsWith("SPRING_DATASOURCE_PASSWORD=")) {
+                            password = line.substring("SPRING_DATASOURCE_PASSWORD=".length()).trim();
+                        }
+                    }
+                    log.info("Loaded database configuration from .env file");
+                }
+            } catch (Exception e) {
+                log.debug("Could not parse .env file: {}", e.getMessage());
+            }
+        }
+
+        HikariConfig config = new HikariConfig();
 
         if (rawUrl != null && (rawUrl.startsWith("postgresql://") || rawUrl.startsWith("postgres://"))) {
             try {
@@ -82,14 +108,12 @@ public class DatabaseConfig {
             }
             config.setJdbcUrl(jdbcUrl);
 
-            if (configuredDriver != null && !configuredDriver.isBlank()) {
-                config.setDriverClassName(configuredDriver);
-            } else if (jdbcUrl.contains("postgresql")) {
-                config.setDriverClassName("org.postgresql.Driver");
-            } else if (jdbcUrl.contains("mysql")) {
+            if (jdbcUrl.contains("mysql")) {
                 config.setDriverClassName("com.mysql.cj.jdbc.Driver");
             } else if (jdbcUrl.contains("h2")) {
                 config.setDriverClassName("org.h2.Driver");
+            } else {
+                config.setDriverClassName("org.postgresql.Driver");
             }
         }
 

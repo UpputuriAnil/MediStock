@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.context.annotation.DependsOn;
+
 @Component
+@DependsOn("postgreSQLSchemaInitializer")
 public class DataLoader implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataLoader.class);
