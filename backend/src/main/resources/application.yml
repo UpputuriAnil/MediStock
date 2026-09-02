@@ -16,6 +16,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        hbm2ddl:
+          create_namespaces: false
+          auto: update
         jdbc:
           lob:
             non_contextual_creation: true
