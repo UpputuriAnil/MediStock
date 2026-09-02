@@ -12,18 +12,13 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     properties:
       hibernate:
         format_sql: true
-        hbm2ddl:
-          create_namespaces: false
-          auto: update
         jdbc:
           lob:
             non_contextual_creation: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
 
   sql:
