@@ -27,7 +27,8 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
+      continue-on-error: true
 
   mail:
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
