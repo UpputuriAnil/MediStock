@@ -23,7 +23,6 @@ public class PostgreSQLSchemaInitializer {
     @PostConstruct
     public void initializeTables() {
         log.info("Executing PostgreSQLSchemaInitializer: Creating all 17 database tables if missing...");
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
         boolean isMySQL = false;
         boolean isH2 = false;
@@ -44,7 +43,7 @@ public class PostgreSQLSchemaInitializer {
 
         String autoIncType = (isMySQL || isH2) ? "BIGINT AUTO_INCREMENT" : "BIGSERIAL";
 
-        executeTableCreate(jdbcTemplate, "permissions", "CREATE TABLE IF NOT EXISTS permissions (" +
+        executeTableCreate(dataSource, "permissions", "CREATE TABLE IF NOT EXISTS permissions (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "name VARCHAR(100) NOT NULL UNIQUE, " +
                 "description VARCHAR(255), " +
@@ -58,7 +57,7 @@ public class PostgreSQLSchemaInitializer {
                 "version BIGINT DEFAULT 0" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "roles", "CREATE TABLE IF NOT EXISTS roles (" +
+        executeTableCreate(dataSource, "roles", "CREATE TABLE IF NOT EXISTS roles (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "name VARCHAR(50) NOT NULL UNIQUE, " +
                 "description VARCHAR(255), " +
@@ -71,7 +70,7 @@ public class PostgreSQLSchemaInitializer {
                 "version BIGINT DEFAULT 0" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "users", "CREATE TABLE IF NOT EXISTS users (" +
+        executeTableCreate(dataSource, "users", "CREATE TABLE IF NOT EXISTS users (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "email VARCHAR(100) NOT NULL UNIQUE, " +
                 "password VARCHAR(255) NOT NULL, " +
@@ -95,7 +94,7 @@ public class PostgreSQLSchemaInitializer {
                 "version BIGINT DEFAULT 0" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "user_roles", "CREATE TABLE IF NOT EXISTS user_roles (" +
+        executeTableCreate(dataSource, "user_roles", "CREATE TABLE IF NOT EXISTS user_roles (" +
                 "user_id BIGINT NOT NULL, " +
                 "role_id BIGINT NOT NULL, " +
                 "PRIMARY KEY (user_id, role_id), " +
@@ -103,7 +102,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "role_permissions", "CREATE TABLE IF NOT EXISTS role_permissions (" +
+        executeTableCreate(dataSource, "role_permissions", "CREATE TABLE IF NOT EXISTS role_permissions (" +
                 "role_id BIGINT NOT NULL, " +
                 "permission_id BIGINT NOT NULL, " +
                 "PRIMARY KEY (role_id, permission_id), " +
@@ -111,7 +110,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "suppliers", "CREATE TABLE IF NOT EXISTS suppliers (" +
+        executeTableCreate(dataSource, "suppliers", "CREATE TABLE IF NOT EXISTS suppliers (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "name VARCHAR(200) NOT NULL, " +
                 "contact_person VARCHAR(100), " +
@@ -133,7 +132,7 @@ public class PostgreSQLSchemaInitializer {
                 "version BIGINT DEFAULT 0" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "medicines", "CREATE TABLE IF NOT EXISTS medicines (" +
+        executeTableCreate(dataSource, "medicines", "CREATE TABLE IF NOT EXISTS medicines (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "name VARCHAR(200) NOT NULL, " +
                 "generic_name VARCHAR(200), " +
@@ -169,7 +168,7 @@ public class PostgreSQLSchemaInitializer {
                 "version BIGINT DEFAULT 0" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "inventory", "CREATE TABLE IF NOT EXISTS inventory (" +
+        executeTableCreate(dataSource, "inventory", "CREATE TABLE IF NOT EXISTS inventory (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "medicine_id BIGINT NOT NULL, " +
                 "supplier_id BIGINT, " +
@@ -195,7 +194,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "purchase_orders", "CREATE TABLE IF NOT EXISTS purchase_orders (" +
+        executeTableCreate(dataSource, "purchase_orders", "CREATE TABLE IF NOT EXISTS purchase_orders (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "order_number VARCHAR(100) NOT NULL UNIQUE, " +
                 "supplier_id BIGINT, " +
@@ -224,7 +223,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (assigned_pharmacist_id) REFERENCES users(id) ON DELETE SET NULL" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "expiry_tracking", "CREATE TABLE IF NOT EXISTS expiry_tracking (" +
+        executeTableCreate(dataSource, "expiry_tracking", "CREATE TABLE IF NOT EXISTS expiry_tracking (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "medicine_id BIGINT, " +
                 "inventory_id BIGINT, " +
@@ -241,7 +240,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (inventory_id) REFERENCES inventory(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "notifications", "CREATE TABLE IF NOT EXISTS notifications (" +
+        executeTableCreate(dataSource, "notifications", "CREATE TABLE IF NOT EXISTS notifications (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "title VARCHAR(200) NOT NULL, " +
                 "message TEXT NOT NULL, " +
@@ -251,7 +250,7 @@ public class PostgreSQLSchemaInitializer {
                 "created_at TIMESTAMP" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "reports", "CREATE TABLE IF NOT EXISTS reports (" +
+        executeTableCreate(dataSource, "reports", "CREATE TABLE IF NOT EXISTS reports (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "report_name VARCHAR(200) NOT NULL, " +
                 "report_type VARCHAR(100), " +
@@ -261,7 +260,7 @@ public class PostgreSQLSchemaInitializer {
                 "created_at TIMESTAMP" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "stock_logs", "CREATE TABLE IF NOT EXISTS stock_logs (" +
+        executeTableCreate(dataSource, "stock_logs", "CREATE TABLE IF NOT EXISTS stock_logs (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "medicine_id BIGINT, " +
                 "medicine_name VARCHAR(200), " +
@@ -276,7 +275,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "payments", "CREATE TABLE IF NOT EXISTS payments (" +
+        executeTableCreate(dataSource, "payments", "CREATE TABLE IF NOT EXISTS payments (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "order_id VARCHAR(100) NOT NULL, " +
                 "payment_id VARCHAR(100), " +
@@ -292,7 +291,7 @@ public class PostgreSQLSchemaInitializer {
                 "created_at TIMESTAMP" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "refresh_tokens", "CREATE TABLE IF NOT EXISTS refresh_tokens (" +
+        executeTableCreate(dataSource, "refresh_tokens", "CREATE TABLE IF NOT EXISTS refresh_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "token VARCHAR(255) NOT NULL UNIQUE, " +
                 "user_id BIGINT NOT NULL, " +
@@ -306,7 +305,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "password_reset_tokens", "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
+        executeTableCreate(dataSource, "password_reset_tokens", "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "token VARCHAR(255) NOT NULL UNIQUE, " +
                 "user_id BIGINT NOT NULL UNIQUE, " +
@@ -319,7 +318,7 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ")");
 
-        executeTableCreate(jdbcTemplate, "email_verification_tokens", "CREATE TABLE IF NOT EXISTS email_verification_tokens (" +
+        executeTableCreate(dataSource, "email_verification_tokens", "CREATE TABLE IF NOT EXISTS email_verification_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
                 "token VARCHAR(255) NOT NULL UNIQUE, " +
                 "user_id BIGINT NOT NULL UNIQUE, " +
@@ -335,12 +334,14 @@ public class PostgreSQLSchemaInitializer {
         log.info("PostgreSQLSchemaInitializer: All 17 database tables initialization statements processed successfully!");
     }
 
-    private void executeTableCreate(JdbcTemplate jdbcTemplate, String tableName, String ddl) {
-        try {
-            jdbcTemplate.execute(ddl);
+    private void executeTableCreate(DataSource dataSource, String tableName, String ddl) {
+        try (Connection conn = dataSource.getConnection();
+             java.sql.Statement stmt = conn.createStatement()) {
+            conn.setAutoCommit(true);
+            stmt.executeUpdate(ddl);
             log.info("Table '{}' created/verified successfully.", tableName);
         } catch (Exception e) {
-            log.warn("Notice initializing table '{}': {}", tableName, e.getMessage());
+            log.error("Notice initializing table '{}': {}", tableName, e.getMessage());
         }
     }
 }
