@@ -131,6 +131,13 @@ public class DatabaseConfig {
         config.setConnectionTimeout(30000);
         config.setPoolName("MediStockHikariPool");
 
-        return new HikariDataSource(config);
+        HikariDataSource ds = new HikariDataSource(config);
+        try {
+            log.info("Triggering direct PostgreSQL schema initialization during DataSource bean creation...");
+            new PostgreSQLSchemaInitializer(ds).initializeTables();
+        } catch (Exception e) {
+            log.warn("Direct PostgreSQL schema initialization warning: {}", e.getMessage());
+        }
+        return ds;
     }
 }
