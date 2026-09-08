@@ -41,21 +41,19 @@ export const MedicineInventory: React.FC = () => {
       const uEmail = (user?.email || '').toLowerCase();
       const uPrefix = uEmail.split('@')[0] || '';
 
-      const hasSpecificMatch = medicines.some((med) => {
+      const matchesSupplier = (med: any) => {
         const s = (med.supplier || '').toLowerCase();
         return (
           (uName && uName !== 'user' && uName !== 'supplier' && (s.includes(uName) || uName.includes(s))) ||
+          (uEmail && (s.includes(uEmail) || uEmail.includes(s))) ||
           (uPrefix && uPrefix.length > 3 && uPrefix !== 'supplier' && (s.includes(uPrefix) || uPrefix.includes(s)))
         );
-      });
+      };
 
-      if (hasSpecificMatch) {
-        const s = (m.supplier || '').toLowerCase();
-        const isMatch = (
-          (uName && uName !== 'user' && uName !== 'supplier' && (s.includes(uName) || uName.includes(s))) ||
-          (uPrefix && uPrefix.length > 3 && uPrefix !== 'supplier' && (s.includes(uPrefix) || uPrefix.includes(s)))
-        );
-        if (!isMatch) return false;
+      const hasSpecificMatch = medicines.some(matchesSupplier);
+      if (hasSpecificMatch && !matchesSupplier(m)) {
+        // If specific match exists, also keep delivered medicines in catalog
+        if (m.status !== 'In Stock') return false;
       }
     }
 

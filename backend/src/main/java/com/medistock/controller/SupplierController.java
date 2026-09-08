@@ -25,25 +25,25 @@ public class SupplierController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('SUPPLIER_CREATE')")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_CREATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Create new supplier")
     public ResponseEntity<ApiResponse<Supplier>> createSupplier(@Valid @RequestBody Supplier supplier) {
         Supplier response = supplierService.createSupplier(supplier);
         return ResponseEntity.ok(ApiResponse.success("Supplier created successfully", response));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
+    @PutMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Update supplier")
     public ResponseEntity<ApiResponse<Supplier>> updateSupplier(
             @PathVariable Long id,
-            @Valid @RequestBody Supplier supplier) {
+            @RequestBody Supplier supplier) {
         Supplier response = supplierService.updateSupplier(id, supplier);
         return ResponseEntity.ok(ApiResponse.success("Supplier updated successfully", response));
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
+    @GetMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get supplier by ID")
     public ResponseEntity<ApiResponse<Supplier>> getSupplierById(@PathVariable Long id) {
         Supplier response = supplierService.getSupplierById(id);
@@ -51,7 +51,7 @@ public class SupplierController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get all suppliers")
     public ResponseEntity<ApiResponse<List<Supplier>>> getAllSuppliers() {
         List<Supplier> response = supplierService.getAllSuppliers();
@@ -59,23 +59,23 @@ public class SupplierController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Search suppliers")
-    public ResponseEntity<ApiResponse<List<Supplier>>> searchSuppliers(@RequestParam String keyword) {
+    public ResponseEntity<ApiResponse<List<Supplier>>> searchSuppliers(@RequestParam(required = false, defaultValue = "") String keyword) {
         List<Supplier> response = supplierService.searchSuppliers(keyword);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/{id}/medicines")
-    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
+    @GetMapping("/{id:[0-9]+}/medicines")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get medicines associated with a supplier")
     public ResponseEntity<ApiResponse<List<Medicine>>> getMedicinesBySupplier(@PathVariable Long id) {
         List<Medicine> response = supplierService.getMedicinesBySupplier(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/{id}/medicines/{medicineId}")
-    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
+    @PostMapping("/{id:[0-9]+}/medicines/{medicineId:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Link supplier with a medicine")
     public ResponseEntity<ApiResponse<Void>> linkSupplierToMedicine(
             @PathVariable Long id,
@@ -84,16 +84,16 @@ public class SupplierController {
         return ResponseEntity.ok(ApiResponse.success("Supplier linked with medicine successfully"));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SUPPLIER_DELETE')")
+    @DeleteMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_DELETE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Delete supplier")
     public ResponseEntity<ApiResponse<Void>> deleteSupplier(@PathVariable Long id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.ok(ApiResponse.success("Supplier deleted successfully"));
     }
 
-    @PutMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
+    @PutMapping("/{id:[0-9]+}/toggle-active")
+    @PreAuthorize("hasAnyAuthority('SUPPLIER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Toggle supplier active status")
     public ResponseEntity<ApiResponse<Supplier>> toggleActiveStatus(@PathVariable Long id) {
         Supplier response = supplierService.toggleActiveStatus(id);

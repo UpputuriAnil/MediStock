@@ -7,6 +7,9 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:${DATABASE_USERNAME:postgres}}
     password: ${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:postgres}}
     driver-class-name: org.postgresql.Driver
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
 
   jpa:
     defer-datasource-initialization: true
@@ -19,7 +22,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    open-in-view: false
+    open-in-view: true
 
   sql:
     init:
@@ -65,7 +68,7 @@ server:
 
 jwt:
   secret: ${JWT_SECRET:MediStockSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLongForHS256AlgorithmSecurity}
-  access-token-expiration: 900000
+  access-token-expiration: 86400000
   refresh-token-expiration: 604800000
   issuer: medistock
   audience: medistock-users

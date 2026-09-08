@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_READ')")
+    @PreAuthorize("hasAnyAuthority('USER_READ', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Get user by ID")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable Long id) {
         UserResponseDto response = userService.getUserById(id);
@@ -40,7 +40,7 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('USER_READ')")
+    @PreAuthorize("hasAnyAuthority('USER_READ', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Get all users")
     public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {
         List<UserResponseDto> response = userService.getAllUsers();
@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @GetMapping("/role/{roleName}")
-    @PreAuthorize("hasAuthority('USER_READ')")
+    @PreAuthorize("hasAnyAuthority('USER_READ', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Get users by role")
     public ResponseEntity<ApiResponse<List<UserResponseDto>>> getUsersByRole(@PathVariable String roleName) {
         List<UserResponseDto> response = userService.getUsersByRole(roleName);
@@ -56,17 +56,25 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Update user")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserResponseDto userDto) {
+            @RequestBody UserResponseDto userDto) {
         UserResponseDto response = userService.updateUser(id, userDto);
         return ResponseEntity.ok(ApiResponse.success("User updated successfully", response));
     }
 
+    @PutMapping("/profile")
+    @Operation(summary = "Update current user profile")
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(
+            @RequestBody UserResponseDto userDto) {
+        UserResponseDto response = userService.updateProfile(userDto);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_DELETE')")
+    @PreAuthorize("hasAnyAuthority('USER_DELETE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Delete user")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
@@ -74,7 +82,7 @@ public class UserController {
     }
 
     @PostMapping("/assign-roles")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Assign roles to user")
     public ResponseEntity<ApiResponse<Void>> assignRolesToUser(@Valid @RequestBody AssignRoleRequest request) {
         userService.assignRolesToUser(request);
@@ -82,7 +90,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}/roles")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Remove roles from user")
     public ResponseEntity<ApiResponse<Void>> removeRolesFromUser(
             @PathVariable Long userId,
@@ -92,7 +100,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/enable")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Enable user")
     public ResponseEntity<ApiResponse<Void>> enableUser(@PathVariable Long id) {
         userService.enableUser(id);
@@ -100,7 +108,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/disable")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('USER_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Disable user")
     public ResponseEntity<ApiResponse<Void>> disableUser(@PathVariable Long id) {
         userService.disableUser(id);

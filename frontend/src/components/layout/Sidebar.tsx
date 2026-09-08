@@ -72,7 +72,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Expiry Tracking', path: '/expiry-tracking', icon: Clock },
     { name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
-    { name: 'System Monitoring', path: '/system-monitoring', icon: Activity },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 

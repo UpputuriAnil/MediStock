@@ -45,14 +45,20 @@ public class PaymentController {
         String medicineName = request.get("medicineName");
         String supplierName = request.get("supplierName");
         String userEmail = request.get("userEmail");
+        Double amount = null;
+        if (request.get("amount") != null) {
+            try {
+                amount = Double.parseDouble(String.valueOf(request.get("amount")));
+            } catch (Exception ignored) {}
+        }
 
         Payment payment = paymentService.verifyPayment(
-                orderId, paymentId, signature, paymentMethod, medicineId, medicineName, supplierName, userEmail
+                orderId, paymentId, signature, paymentMethod, medicineId, medicineName, supplierName, userEmail, amount
         );
         return ResponseEntity.ok(ApiResponse.success("Razorpay payment verified & recorded successfully", payment));
     }
 
-    @GetMapping("/history")
+    @GetMapping({"", "/history"})
     @Operation(summary = "Get all payment transaction logs")
     public ResponseEntity<ApiResponse<List<Payment>>> getPaymentHistory() {
         List<Payment> payments = paymentService.getAllPayments();

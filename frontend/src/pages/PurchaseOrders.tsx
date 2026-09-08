@@ -64,25 +64,24 @@ export const PurchaseOrders: React.FC = () => {
     return orders.filter((o) => {
       // Role access rules
       if (isSupplier) {
+        // Purchase orders created by Admin / Pharmacist appear in Supplier's purchase order history
         const uName = (user?.name || '').toLowerCase();
         const uEmail = (user?.email || '').toLowerCase();
         const uPrefix = uEmail.split('@')[0] || '';
 
-        const hasSpecificMatch = orders.some((ord) => {
+        const matchesSupplier = (ord: any) => {
           const s = (ord.supplierName || '').toLowerCase();
           return (
             (uName && uName !== 'user' && uName !== 'supplier' && (s.includes(uName) || uName.includes(s))) ||
+            (uEmail && (s.includes(uEmail) || uEmail.includes(s))) ||
             (uPrefix && uPrefix.length > 3 && uPrefix !== 'supplier' && (s.includes(uPrefix) || uPrefix.includes(s)))
           );
-        });
+        };
 
-        if (hasSpecificMatch) {
-          const s = (o.supplierName || '').toLowerCase();
-          const isMatch = (
-            (uName && uName !== 'user' && uName !== 'supplier' && (s.includes(uName) || uName.includes(s))) ||
-            (uPrefix && uPrefix.length > 3 && uPrefix !== 'supplier' && (s.includes(uPrefix) || uPrefix.includes(s)))
-          );
-          if (!isMatch) return false;
+        const hasSpecificMatch = orders.some(matchesSupplier);
+        if (hasSpecificMatch && !matchesSupplier(o)) {
+          // If specific match exists, also include all newly created POs
+          if (!o.orderNumber?.startsWith('PO-')) return false;
         }
       }
 
@@ -186,13 +185,13 @@ export const PurchaseOrders: React.FC = () => {
     switch (status) {
       case 'Completed':
       case 'Delivered':
-        return <Badge variant="success" dot><CheckCircle2 className="w-3 h-3 mr-0.5 inline" />Completed</Badge>;
+        return <Badge variant="success" dot><CheckCircle2 className="w-3 h-3 mr-0.5 inline" />Delivered & Restocked</Badge>;
       case 'Shipped':
-        return <Badge variant="secondary" dot><Truck className="w-3 h-3 mr-0.5 inline" />Shipped</Badge>;
+        return <Badge variant="secondary" dot><Truck className="w-3 h-3 mr-0.5 inline" />Shipped (In Transit)</Badge>;
       case 'Approved':
-        return <Badge variant="primary" dot><CheckCircle2 className="w-3 h-3 mr-0.5 inline" />Approved</Badge>;
+        return <Badge variant="primary" dot><CheckCircle2 className="w-3 h-3 mr-0.5 inline" />Accepted & Processing</Badge>;
       case 'Pending':
-        return <Badge variant="warning" dot><Clock className="w-3 h-3 mr-0.5 inline" />Pending</Badge>;
+        return <Badge variant="warning" dot><Clock className="w-3 h-3 mr-0.5 inline" />Pending (Awaiting Vendor)</Badge>;
       default:
         return <Badge variant="danger" dot><AlertCircle className="w-3 h-3 mr-0.5 inline" />Cancelled</Badge>;
     }
@@ -473,13 +472,15 @@ export const PurchaseOrders: React.FC = () => {
                           </>
                         )}
 
-                        <button
-                          onClick={() => setSelectedOrderDetails(po)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        {!isSupplier && (
+                          <button
+                            onClick={() => setSelectedOrderDetails(po)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-primary-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
 
                         {isAdmin && po.status !== 'Cancelled' && po.status !== 'Delivered' && (
                           <button

@@ -86,6 +86,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .claims(claims)
+                .id(UUID.randomUUID().toString())
                 .subject(user.getEmail())
                 .issuer(jwtIssuer)
                 .audience().add(jwtAudience).and()

@@ -8,17 +8,19 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RoleMapper {
 
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "permissionSetToPermissionDtoSet")
     RoleDto toDto(Role role);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "permissions", ignore = true)
     @Mapping(target = "users", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -31,6 +33,7 @@ public interface RoleMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "name", ignore = true)
+    @Mapping(target = "permissions", ignore = true)
     @Mapping(target = "users", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

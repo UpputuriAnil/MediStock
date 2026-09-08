@@ -44,8 +44,8 @@ export const AdminDashboardView: React.FC = () => {
   // Metrics calculation
   const totalMedicines = medicines.length;
   const totalStock = medicines.reduce((sum, m) => sum + m.stock, 0);
-  const lowStockCount = medicines.filter((m) => m.stock > 0 && m.stock <= m.minStockThreshold).length;
-  const outOfStockCount = medicines.filter((m) => m.stock === 0).length;
+  const lowStockCount = medicines.filter((m) => m.stock <= m.minStockThreshold || m.status === 'Low Stock' || m.status === 'Out of Stock').length;
+  const outOfStockCount = medicines.filter((m) => m.stock === 0 || m.status === 'Out of Stock').length;
   const nearExpiryCount = medicines.filter((m) => {
     const days = getDaysRemaining(m.expiryDate);
     return days >= 0 && days <= 90;
@@ -103,9 +103,13 @@ export const AdminDashboardView: React.FC = () => {
             <span className="text-[10px] font-semibold text-slate-500">Physical Units</span>
           </div>
 
-          <div className="glass-card p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 text-center">
+          <div
+            onClick={() => navigate('/medicines')}
+            className="glass-card p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 text-center cursor-pointer hover:border-amber-500/50 transition-all group"
+            title="Click to view Low Stock Items in Medicine Catalog"
+          >
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Low-Stock</span>
-            <span className="text-2xl font-black text-amber-500 block mt-1">{lowStockCount}</span>
+            <span className="text-2xl font-black text-amber-500 block mt-1 group-hover:scale-105 transition-transform">{lowStockCount}</span>
             <span className="text-[10px] font-semibold text-amber-500">Below Minimum</span>
           </div>
 

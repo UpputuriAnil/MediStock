@@ -180,7 +180,11 @@ export const PharmacistDashboardView: React.FC = () => {
           </div>
 
           {/* Inventory Summary: Low Stock Items */}
-          <div className="glass-card p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 relative overflow-hidden group">
+          <div
+            onClick={() => navigate('/medicines')}
+            className="glass-card p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 relative overflow-hidden group cursor-pointer hover:border-amber-500/50 transition-all"
+            title="Click to view Low Stock Items in Medicine Catalog"
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Low Stock Items</span>
               <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
@@ -188,7 +192,7 @@ export const PharmacistDashboardView: React.FC = () => {
               </div>
             </div>
             <div className="mt-3">
-              <span className="text-3xl font-black text-amber-500">{lowStockItems.length}</span>
+              <span className="text-3xl font-black text-amber-500 group-hover:scale-105 transition-transform inline-block">{lowStockItems.length}</span>
               <span className="text-xs text-amber-600 dark:text-amber-400 block mt-0.5">At or Below Reorder Level</span>
             </div>
           </div>

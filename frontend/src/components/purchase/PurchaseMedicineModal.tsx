@@ -261,7 +261,7 @@ export const PurchaseMedicineModal: React.FC<PurchaseMedicineModalProps> = ({ is
             >
               {suppliers.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name} ({s.category || 'Supplier'})
+                  {s.name} ({s.category || 'Supplier'}){s.email ? ` — ${s.email}` : ''}
                 </option>
               ))}
             </select>

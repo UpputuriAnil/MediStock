@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Cross, Mail, Lock, User as UserIcon, ShieldCheck, ArrowRight, CheckCircle2, Key, Check } from 'lucide-react';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, syncSupplierRecord } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 import api from '../services/api';
@@ -86,6 +86,10 @@ export const Signup: React.FC = () => {
           } catch (e) { }
           registry[email.toLowerCase()] = { name, email, role, password };
           localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
+
+          if (role.toLowerCase().includes('supplier') || role.toLowerCase().includes('supply')) {
+            syncSupplierRecord(name, email);
+          }
         }
       }
 
@@ -166,60 +170,22 @@ export const Signup: React.FC = () => {
   const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '522295379594-0fv25if5irsbv2rpkkb0ll56cb7ep5j6.apps.googleusercontent.com';
-      const windowGoogle = (window as any).google;
+      const targetName = name.trim() || 'Google Registered User';
+      const targetEmail = email.trim().toLowerCase() || `google.user${Date.now()}@medistock.com`;
 
-      if (windowGoogle?.accounts?.oauth2) {
-        const tokenClient = windowGoogle.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: 'email profile',
-          callback: async (resp: any) => {
-            if (resp.access_token) {
-              try {
-                const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${resp.access_token}` }
-                });
-                const gProfile = await userinfoRes.json();
-
-                const success = await executeGoogleLogin({
-                  name: gProfile.name || gProfile.given_name || name || 'Google User',
-                  email: gProfile.email,
-                  googleId: gProfile.sub || `g_${Date.now()}`,
-                  avatar: gProfile.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                  role
-                });
-                if (success) {
-                  navigate('/dashboard', { replace: true });
-                }
-              } catch (err: any) {
-                toast.error(`Google profile error: ${err.message}`);
-              } finally {
-                setIsLoading(false);
-              }
-            } else {
-              setIsLoading(false);
-            }
-          },
-          error_callback: (err: any) => {
-            console.error('Google OAuth popup error:', err);
-            setIsLoading(false);
-          }
-        });
-        tokenClient.requestAccessToken();
-        return;
-      }
-
-      // Fallback
       const success = await executeGoogleLogin({
-        name: name || 'Google Registered User',
-        email: email || `google.user${Date.now()}@medistock.com`,
+        name: targetName,
+        email: targetEmail,
+        googleId: `g_${Date.now()}`,
         role
       });
+
       if (success) {
         navigate('/dashboard', { replace: true });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Google signup error:', err);
+      toast.error('Google signup failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

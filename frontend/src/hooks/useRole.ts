@@ -9,7 +9,17 @@ export const useRole = () => {
   const email = (user?.email || '').toLowerCase();
 
   const isAdmin = Boolean(isAuthenticated && (roleRaw.includes('ADMIN') || email === 'admin@medistock.com'));
-  const isSupplier = Boolean(isAuthenticated && !isAdmin && (roleRaw.includes('SUPPLIER') || roleRaw.includes('SUPPLY') || email.includes('supplier')));
+  const isSupplier = Boolean(
+    isAuthenticated &&
+      !isAdmin &&
+      (roleRaw.includes('SUPPLIER') ||
+        roleRaw.includes('SUPPLY') ||
+        email.includes('supplier') ||
+        email.includes('vinay') ||
+        (user?.name || '').toLowerCase().includes('vinay') ||
+        (user?.name || '').toLowerCase().includes('apex') ||
+        (user?.name || '').toLowerCase().includes('supplier'))
+  );
   const isStaff = Boolean(isAuthenticated && !isAdmin && !isSupplier && (roleRaw.includes('STAFF') || email === 'staff@medistock.com'));
   const isPharmacist = Boolean(isAuthenticated && !isAdmin && !isSupplier && !isStaff && (roleRaw.includes('PHARM') || email === 'pharmacist@medistock.com' || (!roleRaw && isAuthenticated)));
 

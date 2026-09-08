@@ -50,6 +50,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadRequestException("No authenticated user found in security context");
+        }
         String email = authentication.getName();
 
         User user = userRepository.findActiveByEmail(email)
@@ -79,7 +82,45 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        userMapper.updateEntityFromDto(userDto, user);
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            if (!userDto.getEmail().equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(userDto.getEmail())) {
+                throw new BadRequestException("Email already in use");
+            }
+            user.setEmail(userDto.getEmail());
+        }
+        if (userDto.getFirstName() != null) user.setFirstName(userDto.getFirstName());
+        if (userDto.getLastName() != null) user.setLastName(userDto.getLastName());
+        if (userDto.getPhoneNumber() != null) user.setPhoneNumber(userDto.getPhoneNumber());
+        if (userDto.getProfilePictureUrl() != null) user.setProfilePictureUrl(userDto.getProfilePictureUrl());
+        if (userDto.getEnabled() != null) user.setEnabled(userDto.getEnabled());
+        if (userDto.getEmailVerified() != null) user.setEmailVerified(userDto.getEmailVerified());
+
+        user = userRepository.save(user);
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto updateProfile(UserResponseDto userDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : userDto.getEmail();
+
+        User user = null;
+        if (email != null && !email.isBlank()) {
+            user = userRepository.findActiveByEmail(email).orElse(null);
+        }
+        if (user == null && userDto.getId() != null) {
+            user = userRepository.findById(userDto.getId()).orElse(null);
+        }
+        if (user == null) {
+            throw new ResourceNotFoundException("User profile not found for update");
+        }
+
+        if (userDto.getFirstName() != null) user.setFirstName(userDto.getFirstName());
+        if (userDto.getLastName() != null) user.setLastName(userDto.getLastName());
+        if (userDto.getPhoneNumber() != null) user.setPhoneNumber(userDto.getPhoneNumber());
+        if (userDto.getProfilePictureUrl() != null) user.setProfilePictureUrl(userDto.getProfilePictureUrl());
+
         user = userRepository.save(user);
         return userMapper.toDto(user);
     }

@@ -71,11 +71,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader(SecurityConstants.JWT_HEADER);
-        
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(SecurityConstants.JWT_PREFIX)) {
-            return bearerToken.substring(SecurityConstants.JWT_PREFIX.length());
+        if (!StringUtils.hasText(bearerToken)) {
+            return null;
         }
-        
-        return null;
+        bearerToken = bearerToken.trim();
+        while (bearerToken.regionMatches(true, 0, SecurityConstants.JWT_PREFIX, 0, SecurityConstants.JWT_PREFIX.length())) {
+            bearerToken = bearerToken.substring(SecurityConstants.JWT_PREFIX.length()).trim();
+        }
+        return StringUtils.hasText(bearerToken) ? bearerToken : null;
     }
 }

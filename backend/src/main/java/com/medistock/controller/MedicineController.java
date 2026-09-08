@@ -25,25 +25,25 @@ public class MedicineController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MEDICINE_CREATE')")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_CREATE', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or hasRole('ADMIN')")
     @Operation(summary = "Create new medicine")
     public ResponseEntity<ApiResponse<Medicine>> createMedicine(@Valid @RequestBody Medicine medicine) {
         Medicine response = medicineService.createMedicine(medicine);
         return ResponseEntity.ok(ApiResponse.success("Medicine created successfully", response));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICINE_UPDATE')")
+    @PutMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_UPDATE', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or hasRole('ADMIN')")
     @Operation(summary = "Update medicine")
     public ResponseEntity<ApiResponse<Medicine>> updateMedicine(
             @PathVariable Long id,
-            @Valid @RequestBody Medicine medicine) {
+            @RequestBody Medicine medicine) {
         Medicine response = medicineService.updateMedicine(id, medicine);
         return ResponseEntity.ok(ApiResponse.success("Medicine updated successfully", response));
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @GetMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_READ', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or isAuthenticated()")
     @Operation(summary = "Get medicine by ID")
     public ResponseEntity<ApiResponse<Medicine>> getMedicineById(@PathVariable Long id) {
         Medicine response = medicineService.getMedicineById(id);
@@ -51,7 +51,7 @@ public class MedicineController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_READ', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or isAuthenticated()")
     @Operation(summary = "Get all medicines")
     public ResponseEntity<ApiResponse<List<Medicine>>> getAllMedicines() {
         List<Medicine> response = medicineService.getAllMedicines();
@@ -59,39 +59,39 @@ public class MedicineController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_READ', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or isAuthenticated()")
     @Operation(summary = "Search medicines")
-    public ResponseEntity<ApiResponse<List<Medicine>>> searchMedicines(@RequestParam String keyword) {
+    public ResponseEntity<ApiResponse<List<Medicine>>> searchMedicines(@RequestParam(required = false, defaultValue = "") String keyword) {
         List<Medicine> response = medicineService.searchMedicines(keyword);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_READ', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or isAuthenticated()")
     @Operation(summary = "Get low stock medicines")
     public ResponseEntity<ApiResponse<List<Medicine>>> getLowStockMedicines() {
         List<Medicine> response = medicineService.getLowStockMedicines();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/{id}/suppliers")
-    @PreAuthorize("hasAuthority('MEDICINE_READ')")
+    @GetMapping("/{id:[0-9]+}/suppliers")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_READ', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or isAuthenticated()")
     @Operation(summary = "Get suppliers associated with a medicine")
     public ResponseEntity<ApiResponse<List<Supplier>>> getSuppliersByMedicine(@PathVariable Long id) {
         List<Supplier> response = medicineService.getSuppliersByMedicine(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MEDICINE_DELETE')")
+    @DeleteMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_DELETE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Delete medicine")
     public ResponseEntity<ApiResponse<Void>> deleteMedicine(@PathVariable Long id) {
         medicineService.deleteMedicine(id);
         return ResponseEntity.ok(ApiResponse.success("Medicine deleted successfully"));
     }
 
-    @PutMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('MEDICINE_UPDATE')")
+    @PutMapping("/{id:[0-9]+}/toggle-active")
+    @PreAuthorize("hasAnyAuthority('MEDICINE_UPDATE', 'ROLE_ADMIN', 'ADMIN', 'ROLE_PHARMACIST', 'PHARMACIST') or hasRole('ADMIN')")
     @Operation(summary = "Toggle medicine active status")
     public ResponseEntity<ApiResponse<Medicine>> toggleActiveStatus(@PathVariable Long id) {
         Medicine response = medicineService.toggleActiveStatus(id);

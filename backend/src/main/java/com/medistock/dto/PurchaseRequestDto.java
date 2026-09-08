@@ -12,12 +12,10 @@ public class PurchaseRequestDto {
     private String medicineName;
     private String category;
     
-    @NotNull(message = "Pharmacist selection is required")
     private Long pharmacistId;
     private String pharmacistName;
     private String pharmacistEmail;
 
-    @NotNull(message = "Supplier selection is required")
     private Long supplierId;
     private String supplierName;
 

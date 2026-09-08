@@ -44,6 +44,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                                     .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                                     .collect(Collectors.toSet());
                             auths.add(new SimpleGrantedAuthority(role.getName()));
+                            if (role.getName().startsWith("ROLE_")) {
+                                auths.add(new SimpleGrantedAuthority(role.getName().substring(5)));
+                            } else {
+                                auths.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+                            }
                             return auths.stream();
                         })
                         .collect(Collectors.toSet()))
@@ -72,6 +77,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                                     .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                                     .collect(Collectors.toSet());
                             auths.add(new SimpleGrantedAuthority(role.getName()));
+                            if (role.getName().startsWith("ROLE_")) {
+                                auths.add(new SimpleGrantedAuthority(role.getName().substring(5)));
+                            } else {
+                                auths.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+                            }
                             return auths.stream();
                         })
                         .collect(Collectors.toSet()))

@@ -271,7 +271,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 1. Try finding and revoking as a refresh token
-        Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByToken(token);
+        Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findFirstByTokenOrderByIdDesc(token);
         if (refreshTokenOpt.isPresent()) {
             RefreshToken refreshToken = refreshTokenOpt.get();
             refreshToken.setRevoked(true);
@@ -280,7 +280,8 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        // 2. If an Access Token (JWT) was passed, extract user and revoke all active refresh tokens for the user
+        // 2. If an Access Token (JWT) was passed, extract user and revoke all active
+        // refresh tokens for the user
         try {
             if (jwtUtil.validateToken(token)) {
                 String email = jwtUtil.getEmailFromToken(token);
@@ -303,7 +304,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken)
+        RefreshToken tokenEntity = refreshTokenRepository.findFirstByTokenOrderByIdDesc(refreshToken)
                 .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
 
         if (tokenEntity.getRevoked() || tokenEntity.isExpired()) {
@@ -334,24 +335,28 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
+    public String forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
 
-        // Delete existing password reset token if any
-        passwordResetTokenRepository.deleteByUser(user);
-
         // Generate new token
         String resetToken = generateToken();
-        PasswordResetToken passwordResetToken = new PasswordResetToken();
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByUser(user)
+                .orElseGet(() -> {
+                    PasswordResetToken t = new PasswordResetToken();
+                    t.setUser(user);
+                    return t;
+                });
+
         passwordResetToken.setToken(resetToken);
-        passwordResetToken.setUser(user);
         passwordResetToken.setExpiryDate(LocalDateTime.now().plus(Duration.ofMillis(passwordResetTokenExpiration)));
+        passwordResetToken.setUsed(false);
+        passwordResetToken.setUsedAt(null);
 
         passwordResetTokenRepository.save(passwordResetToken);
 
-        // TODO: Send password reset email
         System.out.println("Password reset token: " + resetToken);
+        return resetToken;
     }
 
     @Override
@@ -431,7 +436,8 @@ public class AuthServiceImpl implements AuthService {
                 .collect(java.util.stream.Collectors.toSet());
 
         Set<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream() : java.util.stream.Stream.empty())
+                .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream()
+                        : java.util.stream.Stream.empty())
                 .map(permission -> permission.getName())
                 .collect(java.util.stream.Collectors.toSet());
 
@@ -443,8 +449,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getPhoneNumber(),
                 user.getEmailVerified(),
                 roles,
-                permissions
-        );
+                permissions);
     }
 
     private void saveRefreshToken(User user, String token) {

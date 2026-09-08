@@ -26,7 +26,7 @@ public class PermissionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_CREATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CREATE', 'PERMISSION_CREATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Create a new permission")
     public ResponseEntity<ApiResponse<PermissionDto>> createPermission(@Valid @RequestBody CreatePermissionRequest request) {
         PermissionDto response = permissionService.createPermission(request);
@@ -35,7 +35,7 @@ public class PermissionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'PERMISSION_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get permission by ID")
     public ResponseEntity<ApiResponse<PermissionDto>> getPermissionById(@PathVariable Long id) {
         PermissionDto response = permissionService.getPermissionById(id);
@@ -43,7 +43,7 @@ public class PermissionController {
     }
 
     @GetMapping("/name/{name}")
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'PERMISSION_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get permission by name")
     public ResponseEntity<ApiResponse<PermissionDto>> getPermissionByName(@PathVariable String name) {
         PermissionDto response = permissionService.getPermissionByName(name);
@@ -51,7 +51,7 @@ public class PermissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'PERMISSION_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get all permissions")
     public ResponseEntity<ApiResponse<List<PermissionDto>>> getAllPermissions() {
         List<PermissionDto> response = permissionService.getAllPermissions();
@@ -59,7 +59,7 @@ public class PermissionController {
     }
 
     @GetMapping("/category/{category}")
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'PERMISSION_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get permissions by category")
     public ResponseEntity<ApiResponse<List<PermissionDto>>> getPermissionsByCategory(@PathVariable String category) {
         List<PermissionDto> response = permissionService.getPermissionsByCategory(category);
@@ -67,17 +67,17 @@ public class PermissionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_UPDATE', 'PERMISSION_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Update permission")
     public ResponseEntity<ApiResponse<PermissionDto>> updatePermission(
             @PathVariable Long id,
-            @Valid @RequestBody PermissionDto permissionDto) {
+            @RequestBody PermissionDto permissionDto) {
         PermissionDto response = permissionService.updatePermission(id, permissionDto);
         return ResponseEntity.ok(ApiResponse.success("Permission updated successfully", response));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_DELETE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DELETE', 'PERMISSION_DELETE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Delete permission")
     public ResponseEntity<ApiResponse<Void>> deletePermission(@PathVariable Long id) {
         permissionService.deletePermission(id);

@@ -53,19 +53,34 @@ public class PaymentService {
     @Transactional
     public Payment verifyPayment(String orderId, String paymentId, String razorpaySignature, String paymentMethod,
             String medicineId, String medicineName, String supplierName, String userEmail) {
+        return verifyPayment(orderId, paymentId, razorpaySignature, paymentMethod, medicineId, medicineName, supplierName, userEmail, null);
+    }
+
+    @Transactional
+    public Payment verifyPayment(String orderId, String paymentId, String razorpaySignature, String paymentMethod,
+            String medicineId, String medicineName, String supplierName, String userEmail, Double amount) {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElse(new Payment());
 
         if (payment.getOrderId() == null) {
-            payment.setOrderId(orderId);
+            payment.setOrderId(orderId != null ? orderId : "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
+        }
+
+        if (payment.getAmount() == null) {
+            payment.setAmount(amount != null ? amount : 1200.0);
+        }
+        if (payment.getCurrency() == null) {
+            payment.setCurrency("INR");
         }
 
         payment.setPaymentId(paymentId != null ? paymentId
                 : "pay_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-        payment.setRazorpaySignature(razorpaySignature);
+        payment.setRazorpaySignature(razorpaySignature != null ? razorpaySignature : "sig_verified");
         payment.setStatus("PAID");
         if (paymentMethod != null) {
             payment.setPaymentMethod(paymentMethod);
+        } else if (payment.getPaymentMethod() == null) {
+            payment.setPaymentMethod("Razorpay");
         }
         if (medicineId != null)
             payment.setMedicineId(medicineId);

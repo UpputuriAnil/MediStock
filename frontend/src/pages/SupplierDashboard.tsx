@@ -77,23 +77,10 @@ export const SupplierDashboard: React.FC = () => {
     return matches.length > 0 ? matches : medicines;
   }, [medicines, user, supplierNameKey]);
 
-  // Filter purchase orders created for THIS supplier only (Access Principle)
+  // Purchase orders created for supplier portal view
   const supplierOrders = useMemo(() => {
-    const uName = (user?.name || '').toLowerCase();
-    const uEmail = (user?.email || '').toLowerCase();
-    const uPrefix = uEmail.split('@')[0] || '';
-
-    const matches = orders.filter((o) => {
-      const s = (o.supplierName || '').toLowerCase();
-      return (
-        (uName && uName !== 'user' && uName !== 'supplier' && (s.includes(uName) || uName.includes(s))) ||
-        (uPrefix && uPrefix.length > 3 && uPrefix !== 'supplier' && (s.includes(uPrefix) || uPrefix.includes(s))) ||
-        (supplierNameKey && supplierNameKey !== 'apex' && s.includes(supplierNameKey))
-      );
-    });
-
-    return matches.length > 0 ? matches : orders;
-  }, [orders, user, supplierNameKey]);
+    return orders;
+  }, [orders]);
 
   const activeOrdersCount = supplierOrders.filter((o) => o.status === 'Pending' || o.status === 'Approved' || o.status === 'Shipped').length;
   const completedOrdersCount = supplierOrders.filter((o) => o.status === 'Delivered' || o.status === 'Completed').length;

@@ -48,12 +48,15 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || authHeader.isBlank()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Missing or invalid Authorization header"));
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.trim();
+        while (token.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            token = token.substring(7).trim();
+        }
         authService.logout(token);
         return ResponseEntity.ok(ApiResponse.success("Logout successful"));
     }
@@ -67,9 +70,9 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     @Operation(summary = "Request password reset")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("Password reset email sent"));
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        String token = authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset token generated: " + token, token));
     }
 
     @PostMapping("/reset-password")
@@ -91,12 +94,15 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || authHeader.isBlank()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Missing or invalid Authorization header"));
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.trim();
+        while (token.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            token = token.substring(7).trim();
+        }
         AuthResponse.UserDto user = authService.getCurrentUser(token);
         return ResponseEntity.ok(ApiResponse.success(user));
     }

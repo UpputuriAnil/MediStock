@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, Trash2, Filter, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
+import { useInventory } from '../context/InventoryContext';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
+import toast from 'react-hot-toast';
 
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../hooks/useRole';
 
 export const Notifications: React.FC = () => {
+  const { orders, updateOrderStatus } = useInventory();
   const {
     notifications,
     unreadCount,
@@ -155,7 +158,30 @@ export const Notifications: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  {isSupplier && (n.category === 'Order' || n.title.includes('Purchase Order')) && (
+                    <button
+                      onClick={() => {
+                        const poMatch = orders.find(
+                          (o) => n.message.includes(o.orderNumber) || n.title.includes(o.orderNumber)
+                        ) || orders.find((o) => o.status === 'Pending');
+
+                        if (poMatch) {
+                          updateOrderStatus(poMatch.id, 'Approved');
+                          markAsRead(n.id);
+                          toast.success(`Accepted & Processed Purchase Order ${poMatch.orderNumber}! Admin & Pharmacist notified.`);
+                        } else {
+                          toast.success(`Purchase Order Requisition accepted!`);
+                          markAsRead(n.id);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Accept & Process Order</span>
+                    </button>
+                  )}
+
                   {!n.read ? (
                     <button
                       onClick={() => markAsRead(n.id)}

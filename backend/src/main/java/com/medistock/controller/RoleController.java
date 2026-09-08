@@ -25,7 +25,7 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_CREATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CREATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Create a new role")
     public ResponseEntity<ApiResponse<RoleDto>> createRole(@Valid @RequestBody CreateRoleRequest request) {
         RoleDto response = roleService.createRole(request);
@@ -34,7 +34,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get role by ID")
     public ResponseEntity<ApiResponse<RoleDto>> getRoleById(@PathVariable Long id) {
         RoleDto response = roleService.getRoleById(id);
@@ -42,7 +42,7 @@ public class RoleController {
     }
 
     @GetMapping("/name/{name}")
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get role by name")
     public ResponseEntity<ApiResponse<RoleDto>> getRoleByName(@PathVariable String name) {
         RoleDto response = roleService.getRoleByName(name);
@@ -50,7 +50,7 @@ public class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_READ')")
+    @PreAuthorize("hasAnyAuthority('ROLE_READ', 'ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     @Operation(summary = "Get all roles")
     public ResponseEntity<ApiResponse<List<RoleDto>>> getAllRoles() {
         List<RoleDto> response = roleService.getAllRoles();
@@ -58,7 +58,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Update role")
     public ResponseEntity<ApiResponse<RoleDto>> updateRole(
             @PathVariable Long id,
@@ -68,7 +68,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_DELETE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DELETE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Delete role")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
@@ -76,7 +76,7 @@ public class RoleController {
     }
 
     @PostMapping("/assign-permissions")
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Assign permissions to role")
     public ResponseEntity<ApiResponse<Void>> assignPermissionsToRole(
             @Valid @RequestBody AssignPermissionRequest request) {
@@ -85,7 +85,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{roleId}/permissions")
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_UPDATE', 'ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Remove permissions from role")
     public ResponseEntity<ApiResponse<Void>> removePermissionsFromRole(
             @PathVariable Long roleId,

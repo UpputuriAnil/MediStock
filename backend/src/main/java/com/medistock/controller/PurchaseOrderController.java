@@ -15,7 +15,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/purchase-orders")
+@RequestMapping("/purchase-orders")
 @Tag(name = "Purchase Orders", description = "Purchase Order & Medicine Procurement Endpoints")
 public class PurchaseOrderController {
 
@@ -54,7 +54,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/purchase")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Create medicine purchase and assign stock to pharmacist (Admin only)")
     public ResponseEntity<ApiResponse<PurchaseOrder>> createPurchase(
             @Valid @RequestBody PurchaseRequestDto request,
@@ -66,7 +66,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Legacy create purchase order endpoint")
     public ResponseEntity<ApiResponse<PurchaseOrder>> createOrder(
             @Valid @RequestBody PurchaseRequestDto request,
@@ -83,7 +83,7 @@ public class PurchaseOrderController {
     }
 
     @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Cancel purchase order")
     public ResponseEntity<ApiResponse<PurchaseOrder>> cancelPurchase(@PathVariable Long id) {
         PurchaseOrder cancelled = purchaseService.cancelPurchase(id);

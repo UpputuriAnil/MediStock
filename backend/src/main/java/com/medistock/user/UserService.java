@@ -16,6 +16,8 @@ public interface UserService {
 
     UserResponseDto updateUser(Long id, UserResponseDto userDto);
 
+    UserResponseDto updateProfile(UserResponseDto userDto);
+
     void deleteUser(Long id);
 
     void assignRolesToUser(AssignRoleRequest request);

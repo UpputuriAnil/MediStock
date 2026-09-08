@@ -5,6 +5,7 @@ import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Medicine } from '../../types/inventory';
 import { useInventory } from '../../context/InventoryContext';
+import { useAuth } from '../../context/AuthContext';
 import { RazorpayPaymentModal, PaymentDetails } from '../payment/RazorpayPaymentModal';
 import { CreditCard, Sparkles, Lock } from 'lucide-react';
 
@@ -19,7 +20,8 @@ export const AddEditMedicineModal: React.FC<AddEditMedicineModalProps> = ({
   onClose,
   medicineToEdit,
 }) => {
-  const { addMedicine, updateMedicine, categories, suppliers } = useInventory();
+  const { addMedicine, addOrder, updateMedicine, categories, suppliers } = useInventory();
+  const { user } = useAuth();
   const isEditing = !!medicineToEdit;
 
   const [isRazorpayModalOpen, setIsRazorpayModalOpen] = useState(false);
@@ -121,6 +123,8 @@ export const AddEditMedicineModal: React.FC<AddEditMedicineModalProps> = ({
     if (pendingMedicineData) {
       const finalMedicine = {
         ...pendingMedicineData,
+        stock: 0,
+        status: 'Low Stock' as const,
         razorpayPaymentId: razorpayData.paymentId,
         razorpayOrderId: razorpayData.orderId,
         paymentStatus: 'PAID' as const,
@@ -129,6 +133,26 @@ export const AddEditMedicineModal: React.FC<AddEditMedicineModalProps> = ({
         paymentDate: razorpayData.timestamp,
       };
       addMedicine(finalMedicine);
+
+      // Create Purchase Order record with Pending status (waiting for supplier delivery)
+      addOrder({
+        supplierId: suppliers.find((s) => s.name === pendingMedicineData.supplier)?.id || 'SUP-01',
+        supplierName: pendingMedicineData.supplier || 'Apollo Pharmacy',
+        medicineName: pendingMedicineData.name,
+        quantity: pendingMedicineData.stock,
+        pricePerUnit: pendingMedicineData.price,
+        itemsCount: pendingMedicineData.stock,
+        totalAmount: razorpayData.amount || (pendingMedicineData.stock * pendingMedicineData.price),
+        assignedPharmacistName: user?.name || 'Dr. Sarah Jenkins',
+        assignedPharmacistEmail: user?.email || 'sarah.jenkins@medistock.health',
+        batchNumber: pendingMedicineData.batchNumber || `BT-${Math.floor(10000 + Math.random() * 90000)}`,
+        expiryDate: pendingMedicineData.expiryDate || '2027-12-31',
+        invoiceNumber: `INV-RZP-${razorpayData.paymentId.slice(-6)}`,
+        notes: `Medicine Order Placed via Razorpay (${razorpayData.paymentId}). Awaiting Supplier Delivery.`,
+        status: 'Pending',
+        expectedDelivery: new Date().toISOString().slice(0, 10),
+        createdByName: user?.name || 'Admin User',
+      });
     }
     setIsRazorpayModalOpen(false);
     onClose();
@@ -220,7 +244,7 @@ export const AddEditMedicineModal: React.FC<AddEditMedicineModalProps> = ({
             >
               {suppliers.map((s) => (
                 <option key={s.id} value={s.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1">
-                  {s.name} ({s.category || 'Supplier'})
+                  {s.name} ({s.category || 'Supplier'}){s.email ? ` — ${s.email}` : ''}
                 </option>
               ))}
             </select>

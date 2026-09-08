@@ -2,8 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NotificationItem } from '../types/notification';
 import { useAuth } from './AuthContext';
 import { getDaysRemaining } from '../utils/formatters';
-import { MOCK_MEDICINES } from '../services/mockData';
+import { MOCK_MEDICINES, MOCK_ORDERS } from '../services/mockData';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 interface NotificationContextType {
   notifications: NotificationItem[];
@@ -180,7 +181,44 @@ const ADMIN_NOTIFICATIONS: NotificationItem[] = [
   },
 ];
 
-const buildInventoryAlerts = (): NotificationItem[] => {
+const getOrderNotificationsFromOrders = (): NotificationItem[] => {
+  const orderAlerts: NotificationItem[] = [];
+  try {
+    let orderList: any[] = [];
+    const raw = localStorage.getItem('medistock_orders');
+    if (raw && raw !== 'undefined' && raw !== 'null') {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        orderList = parsed;
+      }
+    }
+    if (!Array.isArray(orderList) || orderList.length === 0) {
+      orderList = MOCK_ORDERS;
+    }
+
+    orderList.forEach((ord: any) => {
+      if (!ord) return;
+      const orderNum = ord.orderNumber || ord.id || 'PO-8800';
+      const medName = ord.medicineName || 'Pharmaceutical Supplies';
+      const qty = ord.quantity || ord.itemsCount || 100;
+      const creator = ord.createdByName || ord.assignedPharmacistName || 'Admin / Pharmacist';
+      const supName = ord.supplierName || 'Supplier';
+
+      orderAlerts.push({
+        id: `notif_order_${orderNum}`,
+        title: `New Purchase Order Requisition (${orderNum})`,
+        message: `New Purchase Order ${orderNum} created by ${creator} for ${qty} units of ${medName} (Supplier: ${supName}). Action required: Accept & Process Order.`,
+        timestamp: ord.orderedDate || 'Recently',
+        type: 'alert',
+        read: false,
+        category: 'Order',
+      });
+    });
+  } catch (e) { }
+  return orderAlerts;
+};
+
+const buildInventoryAlerts = (roleKey: string): NotificationItem[] => {
   let medList: any[] = [];
   try {
     const raw = localStorage.getItem('medistock_medicines');
@@ -204,7 +242,7 @@ const buildInventoryAlerts = (): NotificationItem[] => {
       alerts.push({
         id: `notif_out_of_stock_${m.id}`,
         title: `Critical Out of Stock Emergency`,
-        message: `Medicine "${m.name}" (${m.brandName || m.id}) reached 0 ${m.unit || 'units'} stock across central inventory. Immediate reorder required.`,
+        message: `Medicine "${m.name}" (${m.brandName || m.id}) reached 0 ${m.unit || 'units'} stock. Immediate reorder required.`,
         timestamp: 'Just now',
         type: 'alert',
         read: false,
@@ -215,8 +253,8 @@ const buildInventoryAlerts = (): NotificationItem[] => {
     else if (stock <= 50 || stock <= minThreshold || m.status === 'Low Stock') {
       alerts.push({
         id: `notif_low_stock_${m.id}`,
-        title: `Low Stock Reorder Alert (Under 50 Units)`,
-        message: `Low inventory level for "${m.name}": ${stock} ${m.unit || 'units'} remaining (Minimum threshold: 50 units).`,
+        title: `Low Stock Reorder Alert`,
+        message: `Low inventory level for "${m.name}": ${stock} ${m.unit || 'units'} remaining (Minimum threshold: ${minThreshold} units).`,
         timestamp: '10 mins ago',
         type: 'warning',
         read: false,
@@ -229,7 +267,7 @@ const buildInventoryAlerts = (): NotificationItem[] => {
       alerts.push({
         id: `notif_expired_${m.id}`,
         title: `Expired Batch Disposal Alert`,
-        message: `Batch ${m.batchNumber || 'BT-EXP'} of "${m.name}" expired on ${m.expiryDate} (${Math.abs(daysLeft)} days ago). Immediate quarantine & disposal required.`,
+        message: `Batch ${m.batchNumber || 'BT-EXP'} of "${m.name}" expired on ${m.expiryDate} (${Math.abs(daysLeft)} days ago). Immediate quarantine required.`,
         timestamp: '15 mins ago',
         type: 'alert',
         read: false,
@@ -237,11 +275,11 @@ const buildInventoryAlerts = (): NotificationItem[] => {
       });
     }
     // 4. Near Expiry Warning (Within 90 Days)
-    else if (daysLeft >= 0 && daysLeft <= 90 || m.status === 'Near Expiry') {
+    else if ((daysLeft >= 0 && daysLeft <= 90) || m.status === 'Near Expiry') {
       alerts.push({
         id: `notif_near_expiry_${m.id}`,
         title: `Near Expiry Risk Warning (Within 90 Days)`,
-        message: `Batch ${m.batchNumber || 'BT-NEXP'} of "${m.name}" expires in ${daysLeft} days (${m.expiryDate}). Prioritize dispensing before expiration.`,
+        message: `Batch ${m.batchNumber || 'BT-NEXP'} of "${m.name}" expires in ${daysLeft} days (${m.expiryDate}). Prioritize dispensing.`,
         timestamp: '30 mins ago',
         type: 'warning',
         read: false,
@@ -250,40 +288,119 @@ const buildInventoryAlerts = (): NotificationItem[] => {
     }
   });
 
+  // Filter alerts based on role relevance
+  if (roleKey === 'supplier') {
+    return alerts.filter((a) => a.category === 'Order' || a.category === 'Stock');
+  }
+  if (roleKey === 'admin') {
+    return alerts.filter((a) => a.type === 'alert' || a.category === 'Stock' || a.category === 'System');
+  }
+  if (roleKey === 'staff') {
+    return alerts.filter((a) => a.category === 'Stock' || a.category === 'Expiry');
+  }
+
+  // Default Pharmacist: All dispensary stock, expiry, and order alerts
   return alerts;
 };
 
-const getStoredNotifications = (roleKey: string, fallback: NotificationItem[]): NotificationItem[] => {
-  const dynamicAlerts = buildInventoryAlerts();
-  try {
-    const raw = localStorage.getItem(`medistock_notifications_${roleKey}`);
-    if (raw && raw !== 'undefined' && raw !== 'null') {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const storedMap = new Map(parsed.map((item: NotificationItem) => [item.id, item]));
-        const mergedDynamic = dynamicAlerts.map((item) => {
-          if (storedMap.has(item.id)) {
-            return storedMap.get(item.id)!;
-          }
-          return item;
-        });
+const getStoredNotifications = (accountKey: string, roleKey: string, fallback: NotificationItem[]): NotificationItem[] => {
+  const dynamicAlerts = buildInventoryAlerts(roleKey);
+  const orderNotifications = getOrderNotificationsFromOrders();
 
-        const dynamicIds = new Set(dynamicAlerts.map((a) => a.id));
-        const customStored = parsed.filter((item: NotificationItem) => !dynamicIds.has(item.id));
-        return [...mergedDynamic, ...customStored];
+  let keysToCheck = [`medistock_notifications_${accountKey}`];
+  if (roleKey === 'supplier') {
+    keysToCheck.push('medistock_notifications_supplier', 'medistock_notifications_all_suppliers');
+  }
+
+  let customStored: NotificationItem[] = [];
+  keysToCheck.forEach((k) => {
+    try {
+      const raw = localStorage.getItem(k);
+      if (raw && raw !== 'undefined' && raw !== 'null') {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item: NotificationItem) => {
+            if (item && item.id && !customStored.some((existing) => existing.id === item.id || (existing.title === item.title && existing.message === item.message))) {
+              customStored.push(item);
+            }
+          });
+        }
       }
-    }
-  } catch (e) { }
+    } catch (e) { }
+  });
+
+  if (roleKey === 'supplier') {
+    const allSupplierItems = [...customStored, ...orderNotifications, ...dynamicAlerts, ...fallback];
+    const uniqueMap = new Map<string, NotificationItem>();
+
+    allSupplierItems.forEach((item) => {
+      if (!item) return;
+      if (item.category === 'Order' || item.category === 'Stock') {
+        const key = item.id || `${item.title}_${item.message}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, item);
+        }
+      }
+    });
+    return Array.from(uniqueMap.values());
+  }
 
   const fallbackIds = new Set(fallback.map((f) => f.id));
   const uniqueDynamic = dynamicAlerts.filter((a) => !fallbackIds.has(a.id));
-  return [...uniqueDynamic, ...fallback];
+  return [...customStored, ...uniqueDynamic, ...fallback];
 };
 
-const setStoredNotifications = (roleKey: string, items: NotificationItem[]) => {
+const setStoredNotifications = (accountKey: string, items: NotificationItem[]) => {
   try {
-    localStorage.setItem(`medistock_notifications_${roleKey}`, JSON.stringify(items));
+    localStorage.setItem(`medistock_notifications_${accountKey}`, JSON.stringify(items));
+    localStorage.setItem(`medistock_notifications_supplier`, JSON.stringify(items));
   } catch (e) { }
+};
+
+export const pushNotificationToAccount = (
+  targetAccountKeyOrRole: string,
+  notification: Omit<NotificationItem, 'id' | 'timestamp' | 'read'>
+) => {
+  const newItem: NotificationItem = {
+    ...notification,
+    id: `notif_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`,
+    timestamp: 'Just now',
+    read: false,
+  };
+
+  const normKey = targetAccountKeyOrRole.toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
+  const targetKeys = [
+    `medistock_notifications_${normKey}`,
+    `medistock_notifications_supplier`,
+    `medistock_notifications_all_suppliers`
+  ];
+
+  targetKeys.forEach((storageKey) => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      let existing: NotificationItem[] = [];
+      if (raw && raw !== 'undefined' && raw !== 'null') {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) existing = parsed;
+      }
+      const exists = existing.some((n) => n.title === newItem.title && n.message === newItem.message);
+      if (!exists) {
+        const updated = [newItem, ...existing];
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.error('Error pushing notification to account:', e);
+    }
+  });
+
+  // Try pushing to backend API if available
+  api.post('/notifications', {
+    title: newItem.title,
+    message: newItem.message,
+    type: newItem.type,
+    category: newItem.category,
+    read: false,
+  }).catch(() => { });
 };
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -291,7 +408,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
 
-  // Role detection for role-based notifications
+  // Role & Email detection for account-specific notifications
   const userRoleStr = (user?.role || (user as any)?.roles?.[0] || 'Pharmacist').toString().toLowerCase();
   const userEmail = (user?.email || '').toLowerCase();
 
@@ -312,22 +429,24 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     defaultList = PHARMACIST_NOTIFICATIONS;
   }
 
+  const accountKey = userEmail ? userEmail.replace(/[^a-zA-Z0-9]/g, '_') : currentRoleKey;
+
   const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
-    getStoredNotifications(currentRoleKey, defaultList)
+    getStoredNotifications(accountKey, currentRoleKey, defaultList)
   );
 
-  // Sync notifications whenever logged in user / role changes!
+  // Sync notifications whenever logged in user / account / role changes!
   useEffect(() => {
-    const loaded = getStoredNotifications(currentRoleKey, defaultList);
+    const loaded = getStoredNotifications(accountKey, currentRoleKey, defaultList);
     setNotifications(loaded);
-  }, [currentRoleKey, userEmail]);
+  }, [accountKey, currentRoleKey]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAsRead = (id: string) => {
     setNotifications((prev) => {
       const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
-      setStoredNotifications(currentRoleKey, updated);
+      setStoredNotifications(accountKey, updated);
       return updated;
     });
   };
@@ -335,7 +454,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const markAllAsRead = () => {
     setNotifications((prev) => {
       const updated = prev.map((n) => ({ ...n, read: true }));
-      setStoredNotifications(currentRoleKey, updated);
+      setStoredNotifications(accountKey, updated);
       return updated;
     });
     toast.success('All notifications marked as read');
@@ -344,14 +463,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const deleteNotification = (id: string) => {
     setNotifications((prev) => {
       const updated = prev.filter((n) => n.id !== id);
-      setStoredNotifications(currentRoleKey, updated);
+      setStoredNotifications(accountKey, updated);
       return updated;
     });
   };
 
   const clearAll = () => {
     setNotifications([]);
-    setStoredNotifications(currentRoleKey, []);
+    setStoredNotifications(accountKey, []);
     toast.success('Notification center cleared');
   };
 
@@ -364,13 +483,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
     setNotifications((prev) => {
       const updated = [newItem, ...prev];
-      setStoredNotifications(currentRoleKey, updated);
+      setStoredNotifications(accountKey, updated);
       return updated;
     });
 
     // Also push to supplier storage if order notification!
     if (item.category === 'Order') {
-      const supExisting = getStoredNotifications('supplier', SUPPLIER_NOTIFICATIONS);
+      const supExisting = getStoredNotifications('supplier', 'supplier', SUPPLIER_NOTIFICATIONS);
       setStoredNotifications('supplier', [newItem, ...supExisting]);
     }
   };

@@ -52,8 +52,11 @@ public class OpenApiConfig {
                 )
                 .servers(List.of(
                         new Server()
+                                .url("http://localhost:8080/api")
+                                .description("Local Development Server (Port 8080)"),
+                        new Server()
                                 .url("http://localhost:" + serverPort + "/api")
-                                .description("Development Server"),
+                                .description("Configured Server (Port " + serverPort + ")"),
                         new Server()
                                 .url("https://api.medistock.com/api")
                                 .description("Production Server")

@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "permissions")
 @EntityListeners(AuditingEntityListener.class)
@@ -28,6 +30,7 @@ public class Permission {
     private String category;
 
     @ManyToMany(mappedBy = "permissions")
+    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
     @CreatedDate

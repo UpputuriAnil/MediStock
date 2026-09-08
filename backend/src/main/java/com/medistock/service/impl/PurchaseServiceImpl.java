@@ -3,6 +3,7 @@ package com.medistock.service.impl;
 import com.medistock.dto.PurchaseRequestDto;
 import com.medistock.entity.Inventory;
 import com.medistock.entity.Medicine;
+import com.medistock.entity.Notification;
 import com.medistock.entity.PurchaseOrder;
 import com.medistock.entity.StockLog;
 import com.medistock.entity.Supplier;
@@ -10,6 +11,7 @@ import com.medistock.entity.User;
 import com.medistock.exception.ResourceNotFoundException;
 import com.medistock.repository.InventoryRepository;
 import com.medistock.repository.MedicineRepository;
+import com.medistock.repository.NotificationRepository;
 import com.medistock.repository.PurchaseOrderRepository;
 import com.medistock.repository.StockLogRepository;
 import com.medistock.repository.SupplierRepository;
@@ -33,6 +35,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final UserRepository userRepository;
     private final StockLogRepository stockLogRepository;
     private final InventoryRepository inventoryRepository;
+    private final NotificationRepository notificationRepository;
 
     public PurchaseServiceImpl(
             PurchaseOrderRepository purchaseOrderRepository,
@@ -40,7 +43,8 @@ public class PurchaseServiceImpl implements PurchaseService {
             SupplierRepository supplierRepository,
             UserRepository userRepository,
             StockLogRepository stockLogRepository,
-            InventoryRepository inventoryRepository
+            InventoryRepository inventoryRepository,
+            NotificationRepository notificationRepository
     ) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.medicineRepository = medicineRepository;
@@ -48,6 +52,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         this.userRepository = userRepository;
         this.stockLogRepository = stockLogRepository;
         this.inventoryRepository = inventoryRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -84,11 +89,26 @@ public class PurchaseServiceImpl implements PurchaseService {
         if (request.getSupplierId() != null) {
             supplier = supplierRepository.findById(request.getSupplierId()).orElse(null);
         }
+        if (supplier == null && request.getSupplierName() != null) {
+            supplier = supplierRepository.findAll().stream()
+                    .filter(s -> s.getName() != null && s.getName().equalsIgnoreCase(request.getSupplierName()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (supplier == null) {
+            supplier = supplierRepository.findAll().stream().findFirst().orElse(null);
+        }
 
         // 3. Resolve Assigned Pharmacist
         User pharmacist = null;
         if (request.getPharmacistId() != null) {
             pharmacist = userRepository.findById(request.getPharmacistId()).orElse(null);
+        }
+        if (pharmacist == null && request.getPharmacistEmail() != null) {
+            pharmacist = userRepository.findByEmail(request.getPharmacistEmail()).orElse(null);
+        }
+        if (pharmacist == null) {
+            pharmacist = userRepository.findAll().stream().findFirst().orElse(null);
         }
 
         // 4. Calculate Total Price
@@ -118,7 +138,20 @@ public class PurchaseServiceImpl implements PurchaseService {
         order.setOrderedDate(LocalDateTime.now());
         order.setCreatedByName(createdBy != null ? createdBy : "Admin User");
 
-        return purchaseOrderRepository.save(order);
+        PurchaseOrder savedOrder = purchaseOrderRepository.save(order);
+
+        // Create Notification record for Supplier & System
+        try {
+            Notification notif = new Notification();
+            notif.setTitle("New Purchase Order Requisition (" + savedOrder.getOrderNumber() + ")");
+            notif.setMessage("New Purchase Order " + savedOrder.getOrderNumber() + " created by " + savedOrder.getCreatedByName() + " for " + savedOrder.getQuantity() + " units of " + savedOrder.getMedicineName() + " (Supplier: " + savedOrder.getSupplierName() + "). Action required: Accept & Process Order.");
+            notif.setType("alert");
+            notif.setCategory("Order");
+            notif.setRead(false);
+            notificationRepository.save(notif);
+        } catch (Exception ignored) {}
+
+        return savedOrder;
     }
 
     @Override

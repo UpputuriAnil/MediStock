@@ -6,6 +6,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "stock_logs")
 @EntityListeners(AuditingEntityListener.class)
@@ -17,10 +19,12 @@ public class StockLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medicine_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Medicine medicine;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Inventory inventory;
 
     @Column(name = "transaction_type", nullable = false, length = 20)

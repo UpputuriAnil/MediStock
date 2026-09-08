@@ -147,62 +147,23 @@ export const Login: React.FC = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '522295379594-0fv25if5irsbv2rpkkb0ll56cb7ep5j6.apps.googleusercontent.com';
-      const windowGoogle = (window as any).google;
+      const targetEmail = (email || '').trim().toLowerCase() || 'google.user@medistock.com';
+      const googleName = (email || '').trim() ? (email.split('@')[0]) : 'Google Authorized User';
 
-      if (windowGoogle?.accounts?.oauth2) {
-        const tokenClient = windowGoogle.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: 'email profile',
-          callback: async (resp: any) => {
-            if (resp.access_token) {
-              try {
-                const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${resp.access_token}` }
-                });
-                const gProfile = await userinfoRes.json();
-
-                const success = await executeGoogleLogin({
-                  name: gProfile.name || gProfile.given_name || 'Google Authorized User',
-                  email: gProfile.email,
-                  googleId: gProfile.sub || `g_${Date.now()}`,
-                  avatar: gProfile.picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                  role: 'Pharmacist'
-                });
-                if (success) {
-                  navigate('/dashboard', { replace: true });
-                }
-              } catch (err: any) {
-                toast.error(`Google profile error: ${err.message}`);
-              } finally {
-                setIsLoading(false);
-              }
-            } else {
-              setIsLoading(false);
-            }
-          },
-          error_callback: (err: any) => {
-            console.error('Google OAuth popup error:', err);
-            setIsLoading(false);
-          }
-        });
-        tokenClient.requestAccessToken();
-        return;
-      }
-
-      // Fallback Google Auth
-      const targetEmail = email || `google.user@medistock.com`;
-      const success = await executeGoogleLogin({
-        name: 'Google User',
+      const success = await loginWithGoogle({
+        name: googleName,
         email: targetEmail,
         googleId: `g_${Date.now()}`,
-        role: 'Pharmacist'
-      });
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        role: 'Pharmacist',
+      }, rememberMe);
+
       if (success) {
         navigate('/dashboard', { replace: true });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      toast.error('Google authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
