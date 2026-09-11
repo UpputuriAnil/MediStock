@@ -251,12 +251,12 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id BIGSERIAL PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    token VARCHAR(1000) NOT NULL,
     user_id BIGINT NOT NULL,
     expiry_date TIMESTAMP NOT NULL,
     revoked BOOLEAN DEFAULT FALSE,
     revoked_at TIMESTAMP,
-    replaced_by_token VARCHAR(255),
+    replaced_by_token VARCHAR(1000),
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     version BIGINT DEFAULT 0,
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id BIGSERIAL PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    token VARCHAR(1000) NOT NULL,
     user_id BIGINT NOT NULL UNIQUE,
     expiry_date TIMESTAMP NOT NULL,
     used BOOLEAN DEFAULT FALSE,
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id BIGSERIAL PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    token VARCHAR(1000) NOT NULL,
     user_id BIGINT NOT NULL UNIQUE,
     expiry_date TIMESTAMP NOT NULL,
     verified BOOLEAN DEFAULT FALSE,

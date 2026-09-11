@@ -321,10 +321,15 @@ public class DataLoader implements CommandLineRunner {
             user.setEmailVerified(true);
             user.setRoles(roles);
             userRepository.save(user);
-        } else if ("admin.medistock@gmail.com".equalsIgnoreCase(email) || "admin@medistock.com".equalsIgnoreCase(email)) {
+        } else {
+            // Synchronize password, active status, and roles for default seeded accounts
             user.setPassword(passwordEncoder.encode(password));
             user.setRoles(roles);
             user.setEnabled(true);
+            user.setAccountNonExpired(true);
+            user.setAccountNonLocked(true);
+            user.setCredentialsNonExpired(true);
+            user.setEmailVerified(true);
             userRepository.save(user);
         }
     }

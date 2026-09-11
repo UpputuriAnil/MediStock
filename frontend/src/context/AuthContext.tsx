@@ -251,8 +251,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     } catch (err: any) {
       if (err.response) {
-        // Backend active rejection - WRONG / OLD PASSWORD
-        toast.error('Incorrect password! Please enter your correct new password.');
+        const status = err.response.status;
+        const msg = err.response.data?.message || err.response.data?.error || '';
+        if (status === 401 || msg.toLowerCase().includes('bad credentials') || msg.toLowerCase().includes('password')) {
+          toast.error('Incorrect password! Please enter your correct new password.');
+        } else if (msg) {
+          toast.error(msg);
+        } else {
+          toast.error('Authentication failed. Please check your credentials.');
+        }
         return false;
       }
       console.warn('Backend login endpoint unreachable:', err?.message);

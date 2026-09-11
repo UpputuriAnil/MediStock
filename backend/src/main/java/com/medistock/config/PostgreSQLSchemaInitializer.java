@@ -293,12 +293,12 @@ public class PostgreSQLSchemaInitializer {
 
         executeTableCreate(dataSource, "refresh_tokens", "CREATE TABLE IF NOT EXISTS refresh_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
-                "token VARCHAR(255) NOT NULL UNIQUE, " +
+                "token VARCHAR(1000) NOT NULL, " +
                 "user_id BIGINT NOT NULL, " +
                 "expiry_date TIMESTAMP NOT NULL, " +
                 "revoked BOOLEAN DEFAULT FALSE, " +
                 "revoked_at TIMESTAMP, " +
-                "replaced_by_token VARCHAR(255), " +
+                "replaced_by_token VARCHAR(1000), " +
                 "created_at TIMESTAMP, " +
                 "updated_at TIMESTAMP, " +
                 "version BIGINT DEFAULT 0, " +
@@ -307,7 +307,7 @@ public class PostgreSQLSchemaInitializer {
 
         executeTableCreate(dataSource, "password_reset_tokens", "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
-                "token VARCHAR(255) NOT NULL UNIQUE, " +
+                "token VARCHAR(1000) NOT NULL, " +
                 "user_id BIGINT NOT NULL UNIQUE, " +
                 "expiry_date TIMESTAMP NOT NULL, " +
                 "used BOOLEAN DEFAULT FALSE, " +
@@ -320,7 +320,7 @@ public class PostgreSQLSchemaInitializer {
 
         executeTableCreate(dataSource, "email_verification_tokens", "CREATE TABLE IF NOT EXISTS email_verification_tokens (" +
                 "id " + autoIncType + " PRIMARY KEY, " +
-                "token VARCHAR(255) NOT NULL UNIQUE, " +
+                "token VARCHAR(1000) NOT NULL, " +
                 "user_id BIGINT NOT NULL UNIQUE, " +
                 "expiry_date TIMESTAMP NOT NULL, " +
                 "verified BOOLEAN DEFAULT FALSE, " +
@@ -331,7 +331,28 @@ public class PostgreSQLSchemaInitializer {
                 "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ")");
 
+        // Widen token columns on existing tables in PostgreSQL / MySQL
+        alterColumnType(dataSource, "refresh_tokens", "token", "VARCHAR(1000)");
+        alterColumnType(dataSource, "refresh_tokens", "replaced_by_token", "VARCHAR(1000)");
+        alterColumnType(dataSource, "password_reset_tokens", "token", "VARCHAR(1000)");
+        alterColumnType(dataSource, "email_verification_tokens", "token", "VARCHAR(1000)");
+
         log.info("PostgreSQLSchemaInitializer: All 17 database tables initialization statements processed successfully!");
+    }
+
+    private void alterColumnType(DataSource dataSource, String tableName, String column, String newType) {
+        try (Connection conn = dataSource.getConnection();
+             java.sql.Statement stmt = conn.createStatement()) {
+            conn.setAutoCommit(true);
+            String dbName = conn.getMetaData().getDatabaseProductName();
+            if (dbName != null && dbName.toLowerCase().contains("postgre")) {
+                stmt.executeUpdate("ALTER TABLE " + tableName + " ALTER COLUMN " + column + " TYPE " + newType);
+            } else if (dbName != null && dbName.toLowerCase().contains("mysql")) {
+                stmt.executeUpdate("ALTER TABLE " + tableName + " MODIFY COLUMN " + column + " " + newType);
+            }
+        } catch (Exception e) {
+            log.debug("Column alter notice on {}.{}: {}", tableName, column, e.getMessage());
+        }
     }
 
     private void executeTableCreate(DataSource dataSource, String tableName, String ddl) {
