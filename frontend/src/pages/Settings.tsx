@@ -32,7 +32,7 @@ import toast from 'react-hot-toast';
 import { formatNameFromEmail } from '../utils/formatters';
 
 export const Settings: React.FC = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, changePassword } = useAuth() as any;
   const { theme, toggleTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'theme' | 'notifications' | 'security'>('profile');
@@ -49,7 +49,7 @@ export const Settings: React.FC = () => {
     let savedUserObj: any = null;
     try {
       if (rawSavedUser) savedUserObj = JSON.parse(rawSavedUser);
-    } catch (e) {}
+    } catch (e) { }
 
     const registry = JSON.parse(localStorage.getItem('medistock_user_registry') || '{}');
     const activeUser = user || savedUserObj || {};
@@ -123,16 +123,37 @@ export const Settings: React.FC = () => {
     { id: 3, device: 'Firefox on macOS Monterey', ip: '103.110.170.12', location: 'Bengaluru, India', current: false, time: 'Yesterday at 18:40' },
   ]);
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currPassword) {
+      toast.error('Please enter your current password.');
+      return;
+    }
+    if (!newPassword) {
+      toast.error('Please enter your new password.');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast.error('New passwords do not match!');
       return;
     }
-    toast.success('Password updated successfully!');
-    setCurrPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setIsChangingPassword(true);
+    try {
+      if (typeof changePassword === 'function') {
+        const success = await changePassword(currPassword, newPassword, confirmPassword);
+        if (success) {
+          setCurrPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+        }
+      }
+    } catch (err: any) {
+      console.error('Password change error:', err);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleLogoutOtherDevices = () => {
@@ -214,11 +235,10 @@ export const Settings: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-                  isActive
-                    ? 'bg-[#3B82F6] text-white shadow-lg shadow-blue-500/25 ring-1 ring-blue-400/40'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${isActive
+                  ? 'bg-[#3B82F6] text-white shadow-lg shadow-blue-500/25 ring-1 ring-blue-400/40'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'
+                  }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
@@ -393,7 +413,7 @@ export const Settings: React.FC = () => {
                   </div>
                 </div>
 
-                <Button type="submit" variant="primary" size="sm" className="bg-[#3B82F6] hover:bg-blue-600 font-bold">
+                <Button type="submit" variant="primary" size="sm" isLoading={isChangingPassword} className="bg-[#3B82F6] hover:bg-blue-600 font-bold">
                   Change Password
                 </Button>
               </form>
@@ -415,14 +435,12 @@ export const Settings: React.FC = () => {
                       setTwoFactorEnabled(!twoFactorEnabled);
                       toast.success(`2FA Authentication ${!twoFactorEnabled ? 'Enabled' : 'Disabled'}.`);
                     }}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${
-                      twoFactorEnabled ? 'bg-[#3B82F6]' : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${twoFactorEnabled ? 'bg-[#3B82F6]' : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
                   >
                     <span
-                      className={`block w-5 h-5 rounded-full bg-white transition-transform ${
-                        twoFactorEnabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`block w-5 h-5 rounded-full bg-white transition-transform ${twoFactorEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -507,11 +525,10 @@ export const Settings: React.FC = () => {
                             toggleTheme();
                           }
                         }}
-                        className={`p-4 rounded-xl border font-bold text-xs flex flex-col items-center gap-2 transition-all ${
-                          isSelected
-                            ? 'bg-[#3B82F6]/10 border-[#3B82F6] text-[#3B82F6] shadow-md'
-                            : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                        }`}
+                        className={`p-4 rounded-xl border font-bold text-xs flex flex-col items-center gap-2 transition-all ${isSelected
+                          ? 'bg-[#3B82F6]/10 border-[#3B82F6] text-[#3B82F6] shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                          }`}
                       >
                         <Icon className="w-5 h-5" />
                         <span>{mode.label}</span>
@@ -539,9 +556,8 @@ export const Settings: React.FC = () => {
                         setAccentColor(acc.color);
                         toast.success(`Accent color changed to ${acc.label}`);
                       }}
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        accentColor === acc.color ? 'ring-2 ring-offset-2 ring-[#3B82F6] scale-110' : 'border-transparent opacity-80'
-                      }`}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${accentColor === acc.color ? 'ring-2 ring-offset-2 ring-[#3B82F6] scale-110' : 'border-transparent opacity-80'
+                        }`}
                       style={{ backgroundColor: acc.color }}
                       title={acc.label}
                     />
@@ -588,9 +604,8 @@ export const Settings: React.FC = () => {
                     <button
                       key={sz}
                       onClick={() => setFontSize(sz)}
-                      className={`px-4 py-2 rounded-xl border text-xs font-bold uppercase transition-all ${
-                        fontSize === sz ? 'bg-[#3B82F6] text-white border-[#3B82F6]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                      }`}
+                      className={`px-4 py-2 rounded-xl border text-xs font-bold uppercase transition-all ${fontSize === sz ? 'bg-[#3B82F6] text-white border-[#3B82F6]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
                     >
                       {sz}
                     </button>
@@ -640,14 +655,12 @@ export const Settings: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => toggleNotif(item.key as any)}
-                        className={`w-12 h-6 rounded-full transition-colors relative ${
-                          isChecked ? 'bg-[#3B82F6]' : 'bg-slate-300 dark:bg-slate-700'
-                        }`}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${isChecked ? 'bg-[#3B82F6]' : 'bg-slate-300 dark:bg-slate-700'
+                          }`}
                       >
                         <span
-                          className={`block w-5 h-5 rounded-full bg-white transition-transform ${
-                            isChecked ? 'translate-x-6' : 'translate-x-1'
-                          }`}
+                          className={`block w-5 h-5 rounded-full bg-white transition-transform ${isChecked ? 'translate-x-6' : 'translate-x-1'
+                            }`}
                         />
                       </button>
                     </div>

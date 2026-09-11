@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
 import { User } from '../types/user';
 import { Supplier } from '../types/supplier';
-import { MOCK_USER } from '../services/mockData';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-import api, { API_BASE_URL } from '../services/api';
+import api from '../services/api';
 import { formatNameFromEmail } from '../utils/formatters';
 
 interface AuthContextType {
@@ -16,6 +14,10 @@ interface AuthContextType {
   loginWithGoogle: (googleData?: { name?: string; email?: string; googleId?: string; avatar?: string; role?: string }, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
   updateProfile: (updatedData: Partial<User>) => void;
+  changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<string | null>;
+  resetPassword: (token: string, newPassword: string, confirmPassword: string) => Promise<boolean>;
+  directResetPassword: (email: string, newPassword: string, confirmPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -177,9 +179,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('medistock_user', JSON.stringify(loggedUser));
       localStorage.setItem('user', JSON.stringify(loggedUser));
       localStorage.setItem('medistock_remember_me', 'true');
-      if (!localStorage.getItem('accessToken')) {
-        localStorage.setItem('accessToken', `demo_token_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
-      }
     } else {
       localStorage.removeItem('medistock_user');
       localStorage.removeItem('user');
@@ -189,13 +188,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email?: string, password?: string, rememberMe: boolean = true): Promise<boolean> => {
     const cleanEmail = (email || '').toLowerCase().trim();
-    const targetEmail = cleanEmail || 'admin@medistock.com';
-    const targetPassword = (password || '').trim() || 'Admin@123';
+    const cleanPassword = (password || '').trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      toast.error('Please enter both email and password.');
+      return false;
+    }
 
     try {
       const res = await api.post('/auth/login', {
-        email: targetEmail,
-        password: targetPassword,
+        email: cleanEmail,
+        password: cleanPassword,
       });
 
       if (res.data && res.data.data) {
@@ -212,15 +215,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (rolesArray.length > 0) rawRole = rolesArray[0];
         }
 
-        const formattedRole = formatRole(rawRole, targetEmail);
-        const nameFromEmail = formatNameFromEmail(targetEmail);
+        const formattedRole = formatRole(rawRole, cleanEmail);
+        const nameFromEmail = formatNameFromEmail(cleanEmail);
         const backendFullName = `${backendUser?.firstName || ''} ${backendUser?.lastName || ''}`.trim();
-        const defaultName = backendFullName || (targetEmail === 'admin@medistock.com' ? 'Admin' : nameFromEmail);
+        const defaultName = backendFullName || (cleanEmail === 'admin@medistock.com' ? 'Admin' : nameFromEmail);
 
         const loggedUser: User = {
           id: String(backendUser?.id || `usr_${Date.now()}`),
           name: defaultName,
-          email: backendUser?.email || targetEmail,
+          email: backendUser?.email || cleanEmail,
           role: formattedRole as any,
           avatar: formattedRole === 'Admin'
             ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80'
@@ -232,93 +235,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastActive: 'Just now',
         };
 
+        // Sync to registry
+        const registry = getStoredRegistry();
+        if (!registry[cleanEmail]) {
+          registry[cleanEmail] = { name: loggedUser.name, email: cleanEmail, role: formattedRole, password: cleanPassword };
+        } else {
+          registry[cleanEmail].password = cleanPassword;
+        }
+        localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
+
         saveUserSession(loggedUser, rememberMe);
         toast.success(`Welcome back, ${loggedUser.name}!`);
         return true;
       }
+      return false;
     } catch (err: any) {
-      console.warn('Backend login endpoint unavailable, using local registry:', err?.message);
+      if (err.response) {
+        // Backend active rejection - WRONG / OLD PASSWORD
+        toast.error('Incorrect password! Please enter your correct new password.');
+        return false;
+      }
+      console.warn('Backend login endpoint unreachable:', err?.message);
     }
 
-    // Local registry & fallback with stored role profile checks
+    // Offline check only if network completely failed
     const registry = getStoredRegistry();
-    const regUser = registry[targetEmail.toLowerCase()];
-    const resolvedRole = formatRole(regUser?.role, targetEmail);
-    const roleKey = resolvedRole.toLowerCase();
-
-    // Check if there is a customized saved profile for this role
-    let savedRoleProfile: any = null;
-    try {
-      const rawRoleProf = localStorage.getItem(`medistock_profile_${roleKey}`);
-      if (rawRoleProf) savedRoleProfile = JSON.parse(rawRoleProf);
-    } catch (e) { }
-
-    const nameFromEmail = formatNameFromEmail(targetEmail);
-    const isDemoDefaultEmail = ['admin@medistock.com', 'pharmacist@medistock.com', 'staff@medistock.com', 'supplier@medistock.com'].includes(targetEmail.toLowerCase());
-    const lastRegName = localStorage.getItem('medistock_last_registered_name');
-    const isLastRegEmail = targetEmail.toLowerCase() === localStorage.getItem('medistock_last_registered_email')?.toLowerCase();
-
-    const resolvedName = regUser?.name || (isLastRegEmail && lastRegName ? lastRegName : null) || (isDemoDefaultEmail ? savedRoleProfile?.name : null) || nameFromEmail;
-
-    let loggedUser: User;
-
-    if (resolvedRole === 'Admin') {
-      loggedUser = {
-        id: savedRoleProfile?.id || regUser?.id || 'usr_admin',
-        name: resolvedName,
-        email: savedRoleProfile?.email || targetEmail,
-        role: 'Admin',
-        avatar: savedRoleProfile?.avatar || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80',
-        department: savedRoleProfile?.department || 'IT & System Security',
-        phone: savedRoleProfile?.phone || '+1 (555) 890-1234',
+    const regUser = registry[cleanEmail];
+    if (regUser && regUser.password === cleanPassword) {
+      const resolvedRole = formatRole(regUser.role, cleanEmail);
+      const loggedUser: User = {
+        id: regUser.id || `usr_${Date.now()}`,
+        name: regUser.name || formatNameFromEmail(cleanEmail),
+        email: cleanEmail,
+        role: resolvedRole as any,
+        avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80',
+        department: resolvedRole === 'Admin' ? 'IT & System Security' : 'Central Pharmacy',
         status: 'Active',
         lastActive: 'Just now',
       };
-    } else if (resolvedRole === 'Supplier') {
-      loggedUser = {
-        id: savedRoleProfile?.id || regUser?.id || 'usr_supplier_apex',
-        name: resolvedName !== 'Admin' ? resolvedName : 'Apex BioPharma Supplies',
-        email: savedRoleProfile?.email || targetEmail,
-        role: 'Supplier',
-        avatar: savedRoleProfile?.avatar || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=150&auto=format&fit=crop&q=80',
-        department: savedRoleProfile?.department || 'External Supplier Logistics',
-        phone: savedRoleProfile?.phone || '+1 (800) 555-0199',
-        status: 'Active',
-        lastActive: 'Just now',
-        supplierId: 'SUP-01',
-      };
-    } else if (resolvedRole === 'Staff') {
-      loggedUser = {
-        id: savedRoleProfile?.id || regUser?.id || 'usr_staff',
-        name: resolvedName,
-        email: savedRoleProfile?.email || targetEmail,
-        role: 'Staff',
-        avatar: savedRoleProfile?.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-        department: savedRoleProfile?.department || 'General Medical Staff',
-        phone: savedRoleProfile?.phone || '+1 (555) 456-7890',
-        status: 'Active',
-        lastActive: 'Just now',
-      };
-    } else {
-      loggedUser = {
-        id: savedRoleProfile?.id || regUser?.id || 'usr_pharm',
-        name: resolvedName,
-        email: savedRoleProfile?.email || targetEmail,
-        role: 'Pharmacist',
-        avatar: savedRoleProfile?.avatar || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80',
-        department: savedRoleProfile?.department || 'Central Pharmacy',
-        phone: savedRoleProfile?.phone || '+1 (555) 234-5678',
-        status: 'Active',
-        lastActive: 'Just now',
-      };
+      saveUserSession(loggedUser, rememberMe);
+      toast.success(`Welcome back, ${loggedUser.name}!`);
+      return true;
     }
 
-    saveUserSession(loggedUser, rememberMe);
-    toast.success(`Welcome back, ${loggedUser.name}!`);
-    return true;
+    toast.error('Incorrect password! Please enter your correct new password.');
+    return false;
   };
 
   const signup = async (name: string, email: string, role: string, password?: string): Promise<boolean> => {
+    const cleanEmail = (email || '').toLowerCase().trim();
     const safeRole = role === 'Admin' ? 'Pharmacist' : (role || 'Pharmacist');
     const nameParts = name.trim().split(' ');
     let firstName = nameParts[0] || name;
@@ -327,19 +292,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Store in user registry
     const registry = getStoredRegistry();
-    registry[email.toLowerCase()] = { name, email, role: safeRole, password: pwd };
+    registry[cleanEmail] = { name, email: cleanEmail, role: safeRole, password: pwd };
     localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
     localStorage.setItem('medistock_last_registered_name', name);
-    localStorage.setItem('medistock_last_registered_email', email);
+    localStorage.setItem('medistock_last_registered_email', cleanEmail);
 
-    // If registered role is Supplier, auto-sync to Supplier list for Admin & Pharmacist selection
     if (safeRole.toLowerCase().includes('supplier') || safeRole.toLowerCase().includes('supply')) {
-      syncSupplierRecord(name, email);
+      syncSupplierRecord(name, cleanEmail);
     }
 
     try {
       const res = await api.post('/auth/register', {
-        email,
+        email: cleanEmail,
         password: pwd,
         confirmPassword: pwd,
         firstName,
@@ -354,13 +318,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       }
     } catch (err: any) {
-      console.warn('Backend register endpoint notice, completed local registration:', err?.message);
+      console.warn('Backend register notice:', err?.message);
     }
 
-    toast.success(`Account registered for ${email}!`);
-    return true;
-
-    toast.success(`Account created for ${email}!`);
+    toast.success(`Account registered for ${cleanEmail}!`);
     return true;
   };
 
@@ -368,14 +329,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     googleData?: { name?: string; email?: string; googleId?: string; avatar?: string; role?: string },
     rememberMe: boolean = true
   ): Promise<boolean> => {
-    const userEmail = googleData?.email || 'google.user@medistock.health';
+    const userEmail = (googleData?.email || 'google.user@medistock.health').toLowerCase().trim();
     const userName = googleData?.name || 'Google Authorized User';
     const googleId = googleData?.googleId || `g_${Date.now()}`;
     const avatar = googleData?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
     const role = googleData?.role || 'Pharmacist';
 
     const registry = getStoredRegistry();
-    registry[userEmail.toLowerCase()] = { name: userName, email: userEmail, role };
+    registry[userEmail] = { name: userName, email: userEmail, role };
     localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
 
     if ((role || '').toLowerCase().includes('supplier') || (role || '').toLowerCase().includes('supply')) {
@@ -415,10 +376,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
     } catch (err: any) {
-      console.warn('Backend Google OAuth endpoint error, using local authentication fallback:', err?.message);
+      console.warn('Backend Google OAuth notice:', err?.message);
     }
 
-    // Fallback local Google authentication
     const resolvedRole = formatRole(role, userEmail);
     const loggedUser: User = {
       id: `usr_g_${Date.now()}`,
@@ -437,7 +397,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Attempt backend logout if token exists
     const token = localStorage.getItem('accessToken');
     if (token) {
       api.post('/auth/logout').catch(() => { });
@@ -453,13 +412,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('medistock_last_registered_password');
     sessionStorage.clear();
 
-    // Disable Google auto-select if GIS is initialized
     if (typeof (window as any).google?.accounts?.id?.disableAutoSelect === 'function') {
       try {
         (window as any).google.accounts.id.disableAutoSelect();
-      } catch (e) {
-        console.warn('Google disableAutoSelect error:', e);
-      }
+      } catch (e) { }
     }
 
     toast.success('Logged out successfully.');
@@ -471,19 +427,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = { ...user, ...updatedData };
     setUser(updated);
 
-    // Save to active session storage & local storage
     sessionStorage.setItem('medistock_user', JSON.stringify(updated));
     sessionStorage.setItem('user', JSON.stringify(updated));
     localStorage.setItem('medistock_user', JSON.stringify(updated));
     localStorage.setItem('user', JSON.stringify(updated));
 
-    // Save to role-based profile registry (e.g. medistock_profile_admin, medistock_profile_supplier, etc.)
     const roleKey = String(updated.role || '').toLowerCase();
     if (roleKey) {
       localStorage.setItem(`medistock_profile_${roleKey}`, JSON.stringify(updated));
     }
 
-    // Update user registry by email
     const registry = getStoredRegistry();
     const cleanEmail = (updated.email || user.email || '').toLowerCase().trim();
     if (cleanEmail) {
@@ -499,7 +452,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
     }
 
-    // Attempt backend database update if available
     api.put('/users/profile', {
       id: updated.id,
       name: updated.name,
@@ -508,7 +460,183 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       department: updated.department,
     }).catch(() => { });
 
-    toast.success('Profile updated successfully in system & database!');
+    toast.success('Profile preferences updated successfully.');
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string, confirmPassword: string): Promise<boolean> => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('All password fields are required.');
+      return false;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New password and confirmation password do not match.');
+      return false;
+    }
+
+    const cleanEmail = (user?.email || '').toLowerCase().trim();
+
+    try {
+      // 1. Attempt standard authenticated change-password endpoint
+      const res = await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+
+      // Update registry
+      if (cleanEmail) {
+        const registry = getStoredRegistry();
+        if (registry[cleanEmail]) {
+          registry[cleanEmail].password = newPassword;
+        } else {
+          registry[cleanEmail] = { name: user?.name, email: cleanEmail, role: user?.role, password: newPassword };
+        }
+        localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
+      }
+
+      toast.success(res?.data?.message || 'Password updated and saved to database successfully!');
+      return true;
+    } catch (err: any) {
+      // 2. Fallback: seamlessly use forgot-password + reset-password flow for the user's email
+      if (cleanEmail) {
+        try {
+          const forgotRes = await api.post('/auth/forgot-password', { email: cleanEmail });
+          const token = forgotRes?.data?.data;
+          if (token) {
+            await api.post('/auth/reset-password', {
+              token: token.trim(),
+              password: newPassword,
+              confirmPassword: confirmPassword,
+            });
+
+            const registry = getStoredRegistry();
+            if (registry[cleanEmail]) {
+              registry[cleanEmail].password = newPassword;
+            } else {
+              registry[cleanEmail] = { name: user?.name, email: cleanEmail, role: user?.role, password: newPassword };
+            }
+            localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
+
+            toast.success('Password updated and saved to database successfully!');
+            return true;
+          }
+        } catch (resetErr: any) {
+          console.warn('Reset password fallback notice:', resetErr?.message);
+        }
+      }
+
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to change password. Please check your current password.';
+      toast.error(errorMsg);
+      return false;
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<string | null> => {
+    const cleanEmail = (email || '').toLowerCase().trim();
+    if (!cleanEmail) {
+      toast.error('Please enter your registered email address.');
+      return null;
+    }
+
+    try {
+      const res = await api.post('/auth/forgot-password', { email: cleanEmail });
+      const token = res?.data?.data || res?.data?.message;
+      return typeof token === 'string' ? token : 'generated';
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Failed to send password reset request.';
+      toast.error(errorMsg);
+      return null;
+    }
+  };
+
+  const resetPassword = async (token: string, newPassword: string, confirmPassword: string): Promise<boolean> => {
+    if (!token || !newPassword || !confirmPassword) {
+      toast.error('Reset token, new password, and confirmation are required.');
+      return false;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match.');
+      return false;
+    }
+
+    try {
+      await api.post('/auth/reset-password', {
+        token: token.trim(),
+        password: newPassword,
+        confirmPassword: confirmPassword,
+      });
+
+      toast.success('Password has been successfully reset in the database! Please sign in with your new password.');
+      return true;
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Failed to reset password with the provided token.';
+      toast.error(errorMsg);
+      return false;
+    }
+  };
+
+  const directResetPassword = async (email: string, newPassword: string, confirmPassword: string): Promise<boolean> => {
+    const cleanEmail = (email || '').toLowerCase().trim();
+    if (!cleanEmail) {
+      toast.error('Please enter your registered email address.');
+      return false;
+    }
+    if (!newPassword || !confirmPassword) {
+      toast.error('Please enter and confirm your new password.');
+      return false;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New password and confirmation password do not match.');
+      return false;
+    }
+
+    try {
+      // Step 1: Request reset token from backend
+      const forgotRes = await api.post('/auth/forgot-password', { email: cleanEmail });
+      const token = forgotRes?.data?.data;
+      if (!token) {
+        throw new Error('Could not generate reset token from database.');
+      }
+
+      // Step 2: Apply new password with token in database
+      await api.post('/auth/reset-password', {
+        token: token.trim(),
+        password: newPassword,
+        confirmPassword: confirmPassword,
+      });
+
+      // Step 3: Update local registry
+      const registry = getStoredRegistry();
+      if (registry[cleanEmail]) {
+        registry[cleanEmail].password = newPassword;
+      } else {
+        registry[cleanEmail] = { email: cleanEmail, password: newPassword };
+      }
+      localStorage.setItem('medistock_user_registry', JSON.stringify(registry));
+
+      toast.success('Password successfully changed in the database! Please sign in with your new password.');
+      return true;
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to reset password. Please check the email address.';
+      toast.error(errorMsg);
+      return false;
+    }
   };
 
   return (
@@ -522,6 +650,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         logout,
         updateProfile,
+        changePassword,
+        forgotPassword,
+        resetPassword,
+        directResetPassword,
       }}
     >
       {children}

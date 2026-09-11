@@ -89,6 +89,25 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Email verified successfully"));
     }
 
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password for authenticated user")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        if (authHeader == null || authHeader.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Missing or invalid Authorization header"));
+        }
+
+        String token = authHeader.trim();
+        while (token.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            token = token.substring(7).trim();
+        }
+        authService.changePassword(token, request);
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Get authenticated user profile")
     public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser(

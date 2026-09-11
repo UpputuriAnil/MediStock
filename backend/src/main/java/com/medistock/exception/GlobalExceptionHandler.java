@@ -25,70 +25,80 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequestException(
             BadRequestException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(
             UnauthorizedException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbiddenException(
             ForbiddenException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Void>> handleUserAlreadyExistsException(
             UserAlreadyExistsException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(TokenExpiredException.class)
     public ResponseEntity<ApiResponse<Void>> handleTokenExpiredException(
             TokenExpiredException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidTokenException(
             InvalidTokenException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath(ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(
             BadCredentialsException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath("Invalid email or password", request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath("Invalid email or password",
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(
             AuthenticationException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath("Authentication failed: " + ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath("Authentication failed: " + ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
             AccessDeniedException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath("You don't have permission to access this resource", request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath("You don't have permission to access this resource",
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
@@ -122,8 +132,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         violation -> violation.getPropertyPath().toString(),
                         ConstraintViolation::getMessage,
-                        (existing, replacement) -> existing
-                ));
+                        (existing, replacement) -> existing));
 
         ApiResponse<Map<String, String>> response = new ApiResponse<>();
         response.setSuccess(false);
@@ -177,7 +186,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
             org.springframework.http.converter.HttpMessageNotReadableException ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath("Malformed or unreadable JSON request body", request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath("Malformed or unreadable JSON request body",
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -192,7 +202,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(
             Exception ex, WebRequest request) {
-        ApiResponse<Void> response = ApiResponse.errorWithPath("An unexpected error occurred: " + ex.getMessage(), request.getDescription(false).replace("uri=", ""));
+        ApiResponse<Void> response = ApiResponse.errorWithPath("An unexpected error occurred: " + ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

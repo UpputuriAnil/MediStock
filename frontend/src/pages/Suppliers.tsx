@@ -259,25 +259,12 @@ export const Suppliers: React.FC = () => {
       <Modal
         isOpen={!!selectedSupplier}
         onClose={() => setSelectedSupplier(null)}
-        title={`${selectedSupplier?.name} — Performance Indicators & Specs`}
-        subtitle={`Vendor ID: ${selectedSupplier?.id} • Category: ${selectedSupplier?.category}`}
-        maxWidth="2xl"
+        title={`${selectedSupplier?.name} — Performance Analytics & Audit Intelligence`}
+        subtitle={`Vendor ID: ${selectedSupplier?.id} • Verified GxP Category: ${selectedSupplier?.category || 'Pharmaceutical Supplies'}`}
+        maxWidth="5xl"
       >
         {selectedSupplier && (
           <div className="space-y-6 text-xs">
-            {/* Supplier Contact Profile */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
-              <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-primary-500" /> Supplier Profile & Contract Information
-              </h4>
-              <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
-                <p>Contact Person: <strong className="text-slate-900 dark:text-white">{selectedSupplier.contactPerson}</strong></p>
-                <p>Work Email: <strong className="text-slate-900 dark:text-white">{selectedSupplier.email}</strong></p>
-                <p>Phone Number: <strong className="text-slate-900 dark:text-white">{selectedSupplier.phone}</strong></p>
-                <p>Address: <strong className="text-slate-900 dark:text-white">{selectedSupplier.address}</strong></p>
-              </div>
-            </div>
-
             {/* Performance Indicators & Analytics View */}
             <SupplierPerformanceView supplier={selectedSupplier} />
 

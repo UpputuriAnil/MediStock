@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Pill,
@@ -8,7 +9,8 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
-  Clock
+  Clock,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useInventory } from '../context/InventoryContext';
@@ -108,6 +110,14 @@ export const StaffDashboard: React.FC = () => {
             <Clock className="w-4 h-4 text-primary-400" />
             <span>Shift Status: Active Duty</span>
           </div>
+
+          <Link
+            to="/settings"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary-600/20 hover:bg-primary-600/30 text-primary-400 border border-primary-500/30 text-xs font-bold transition-all shadow-sm"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Account Settings</span>
+          </Link>
         </div>
       </div>
 

@@ -45,8 +45,10 @@ public interface RoleMapper {
     void updateEntityFromDto(UpdateRoleRequest request, @MappingTarget Role role);
 
     @Named("permissionSetToPermissionDtoSet")
-    default Set<com.medistock.dto.PermissionDto> permissionSetToPermissionDtoSet(Set<com.medistock.entity.Permission> permissions) {
-        if (permissions == null) return null;
+    default Set<com.medistock.dto.PermissionDto> permissionSetToPermissionDtoSet(
+            Set<com.medistock.entity.Permission> permissions) {
+        if (permissions == null)
+            return null;
         Set<com.medistock.dto.PermissionDto> dtoSet = new java.util.HashSet<>();
         for (com.medistock.entity.Permission permission : permissions) {
             com.medistock.dto.PermissionDto dto = new com.medistock.dto.PermissionDto();

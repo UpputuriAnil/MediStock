@@ -417,6 +417,36 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
+    public void changePassword(String token, ChangePasswordRequest request) {
+        if (token != null && token.startsWith(SecurityConstants.JWT_PREFIX)) {
+            token = token.substring(SecurityConstants.JWT_PREFIX.length());
+        }
+
+        if (!jwtUtil.validateToken(token)) {
+            throw new InvalidTokenException("Invalid or expired JWT token");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("New password and confirmation password do not match");
+        }
+
+        String email = jwtUtil.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password does not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Revoke old refresh tokens for security
+        refreshTokenRepository.deleteAllByUser(user);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public AuthResponse.UserDto getCurrentUser(String token) {
         if (token != null && token.startsWith(SecurityConstants.JWT_PREFIX)) {

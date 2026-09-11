@@ -5,6 +5,8 @@ import { Cross, Lock, Mail, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide
 import { Input } from '../components/common/Input';
 import { Button as CustomButton } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
+import { promptGoogleSignIn } from '../services/googleAuth';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -16,6 +18,7 @@ export const Login: React.FC = () => {
   const authContext = useAuth() as any;
   const login = authContext?.login;
   const loginWithGoogle = authContext?.loginWithGoogle;
+  const directResetPassword = authContext?.directResetPassword;
   const isAuthenticated = authContext?.isAuthenticated;
   const user = authContext?.user;
 
@@ -34,6 +37,9 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const executeGoogleLogin = async (googleData: { name: string; email: string; googleId: string; avatar?: string; role?: string }) => {
     if (typeof loginWithGoogle === 'function') {
@@ -147,32 +153,81 @@ export const Login: React.FC = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const targetEmail = (email || '').trim().toLowerCase() || 'google.user@medistock.com';
-      const googleName = (email || '').trim() ? (email.split('@')[0]) : 'Google Authorized User';
+      const googleProfile = await promptGoogleSignIn();
+
+      let targetRole: 'Admin' | 'Pharmacist' | 'Staff' | 'Supplier' = 'Pharmacist';
+      const cleanEmail = (googleProfile.email || '').toLowerCase().trim();
+      if (cleanEmail.includes('admin') || cleanEmail.includes('anilupputuri')) {
+        targetRole = 'Admin';
+      } else if (cleanEmail.includes('supplier')) {
+        targetRole = 'Supplier';
+      } else if (cleanEmail.includes('staff')) {
+        targetRole = 'Staff';
+      }
 
       const success = await loginWithGoogle({
-        name: googleName,
-        email: targetEmail,
-        googleId: `g_${Date.now()}`,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        role: 'Pharmacist',
+        name: googleProfile.name,
+        email: googleProfile.email,
+        googleId: googleProfile.googleId,
+        avatar: googleProfile.avatar,
+        role: targetRole,
       }, rememberMe);
 
       if (success) {
-        navigate('/dashboard', { replace: true });
+        let targetRoute = '/pharmacist-dashboard';
+        if (targetRole === 'Admin') {
+          targetRoute = '/admin-dashboard';
+        } else if (targetRole === 'Supplier') {
+          targetRoute = '/supplier-dashboard';
+        } else if (targetRole === 'Staff') {
+          targetRoute = '/staff-dashboard';
+        }
+        navigate(targetRoute, { replace: true });
       }
     } catch (err: any) {
       console.error('Google login error:', err);
-      toast.error('Google authentication failed. Please try again.');
+      const errMsg = err?.message || '';
+      if (!errMsg.includes('closed') && !errMsg.includes('cancel') && !errMsg.includes('popup_closed_by_user')) {
+        toast.error(`Google Sign-In: ${errMsg || 'Authentication failed'}`);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`Password reset instructions sent to ${forgotEmail || email}`);
-    setIsForgotModalOpen(false);
+    const targetEmail = (forgotEmail || email || '').trim().toLowerCase();
+    if (!targetEmail) {
+      toast.error('Please enter your registered work email address.');
+      return;
+    }
+    if (!forgotNewPassword || !forgotConfirmPassword) {
+      toast.error('Please enter and confirm your new password.');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      toast.error('New password and confirmation password do not match.');
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      if (typeof directResetPassword === 'function') {
+        const success = await directResetPassword(targetEmail, forgotNewPassword, forgotConfirmPassword);
+        if (success) {
+          setEmail(targetEmail);
+          setPassword(forgotNewPassword);
+          setIsForgotModalOpen(false);
+          setForgotNewPassword('');
+          setForgotConfirmPassword('');
+        }
+      }
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   const getRoleProfileName = (roleKey: string, defaultName: string) => {
@@ -182,7 +237,7 @@ export const Login: React.FC = () => {
         const parsed = JSON.parse(raw);
         if (parsed?.name) return parsed.name;
       }
-    } catch (e) {}
+    } catch (e) { }
     return defaultName;
   };
 
@@ -379,11 +434,11 @@ export const Login: React.FC = () => {
       <Modal
         isOpen={isForgotModalOpen}
         onClose={() => setIsForgotModalOpen(false)}
-        title="Reset Password"
+        title="Reset Account Password"
       >
         <form onSubmit={handleForgotSubmit} className="space-y-4">
           <p className="text-xs text-slate-400">
-            Enter your registered work email address. We will send password reset instructions to your inbox.
+            Enter your registered email address and your new password to update your credentials directly in the database.
           </p>
 
           <Input
@@ -396,6 +451,26 @@ export const Login: React.FC = () => {
             required
           />
 
+          <Input
+            label="New Password"
+            type="password"
+            value={forgotNewPassword}
+            onChange={(e) => setForgotNewPassword(e.target.value)}
+            leftIcon={<Lock className="w-4 h-4 text-slate-400" />}
+            placeholder="Enter at least 8 characters with upper, lower, digit & special"
+            required
+          />
+
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={forgotConfirmPassword}
+            onChange={(e) => setForgotConfirmPassword(e.target.value)}
+            leftIcon={<Lock className="w-4 h-4 text-slate-400" />}
+            placeholder="Re-enter your new password"
+            required
+          />
+
           <div className="flex justify-end gap-3 pt-2">
             <CustomButton
               type="button"
@@ -404,8 +479,8 @@ export const Login: React.FC = () => {
             >
               Cancel
             </CustomButton>
-            <CustomButton type="submit">
-              Send Instructions
+            <CustomButton type="submit" isLoading={isResettingPassword}>
+              Reset & Save Password
             </CustomButton>
           </div>
         </form>

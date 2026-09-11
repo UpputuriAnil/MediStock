@@ -1,6 +1,7 @@
 package com.medistock.auth;
 
 import com.medistock.dto.*;
+import com.medistock.dto.ChangePasswordRequest;
 
 public interface AuthService {
 
@@ -19,6 +20,8 @@ public interface AuthService {
     void resetPassword(ResetPasswordRequest request);
 
     void verifyEmail(String token);
+
+    void changePassword(String token, ChangePasswordRequest request);
 
     AuthResponse.UserDto getCurrentUser(String token);
 }

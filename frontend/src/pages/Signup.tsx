@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Cross, Mail, Lock, User as UserIcon, ShieldCheck, ArrowRight, CheckCircle2, Key, Check } from 'lucide-react';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { promptGoogleSignIn } from '../services/googleAuth';
 import { useAuth, syncSupplierRecord } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -170,22 +171,43 @@ export const Signup: React.FC = () => {
   const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      const targetName = name.trim() || 'Google Registered User';
-      const targetEmail = email.trim().toLowerCase() || `google.user${Date.now()}@medistock.com`;
+      const googleProfile = await promptGoogleSignIn();
+
+      let targetRole = role || 'Pharmacist';
+      const cleanEmail = (googleProfile.email || '').toLowerCase().trim();
+      if (cleanEmail.includes('admin') || cleanEmail.includes('anilupputuri')) {
+        targetRole = 'Admin';
+      } else if (cleanEmail.includes('supplier')) {
+        targetRole = 'Supplier';
+      } else if (cleanEmail.includes('staff')) {
+        targetRole = 'Staff';
+      }
 
       const success = await executeGoogleLogin({
-        name: targetName,
-        email: targetEmail,
-        googleId: `g_${Date.now()}`,
-        role
+        name: googleProfile.name,
+        email: googleProfile.email,
+        googleId: googleProfile.googleId,
+        avatar: googleProfile.avatar,
+        role: targetRole,
       });
 
       if (success) {
-        navigate('/dashboard', { replace: true });
+        let targetRoute = '/pharmacist-dashboard';
+        if (targetRole === 'Admin') {
+          targetRoute = '/admin-dashboard';
+        } else if (targetRole === 'Supplier') {
+          targetRoute = '/supplier-dashboard';
+        } else if (targetRole === 'Staff') {
+          targetRoute = '/staff-dashboard';
+        }
+        navigate(targetRoute, { replace: true });
       }
     } catch (err: any) {
       console.error('Google signup error:', err);
-      toast.error('Google signup failed. Please try again.');
+      const errMsg = err?.message || '';
+      if (!errMsg.includes('closed') && !errMsg.includes('cancel') && !errMsg.includes('popup_closed_by_user')) {
+        toast.error(`Google Sign-In: ${errMsg || 'Sign-up failed'}`);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -93,6 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Stock Logs', path: '/stock-logs', icon: Boxes },
     { name: 'Expiry Tracking', path: '/expiry-tracking', icon: Clock },
     { name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount },
+    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   const supplierMenuItems: MenuItem[] = [
