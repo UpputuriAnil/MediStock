@@ -125,10 +125,12 @@ public class DatabaseConfig {
             config.setPassword(password);
         }
 
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setIdleTimeout(30000);
-        config.setConnectionTimeout(30000);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(1);
+        config.setIdleTimeout(60000);
+        config.setConnectionTimeout(60000);
+        config.setMaxLifetime(1800000);
+        config.setKeepaliveTime(30000);
         config.setPoolName("MediStockHikariPool");
 
         HikariDataSource ds = new HikariDataSource(config);

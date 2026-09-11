@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @DependsOn("postgreSQLSchemaInitializer")
@@ -64,7 +65,8 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    private void loadSeedData() {
+    @Transactional
+    public void loadSeedData() {
         // Step 1: Create Permissions (idempotent)
         Set<Permission> permissions = new HashSet<>();
         permissions.add(getOrCreatePermission("USER_CREATE", "Create new users", "USER"));
