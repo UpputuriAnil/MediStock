@@ -105,7 +105,9 @@ public class DataLoader implements CommandLineRunner {
                 getPermissionsByName(permissions, "MEDICINE_READ", "INVENTORY_READ", "SUPPLIER_READ"));
 
         // Step 3: Create Users (idempotent)
-        createUserIfNotFound("admin@medistock.com", "Admin@123", "System", "Administrator", "+1234567890",
+        createUserIfNotFound("admin.medistock@gmail.com", "Admin@12345", "Super", "Admin", "+1234567890",
+                Set.of(adminRole));
+        createUserIfNotFound("admin@medistock.com", "Admin@12345", "System", "Administrator", "+1234567890",
                 Set.of(adminRole));
         createUserIfNotFound("pharmacist@medistock.com", "Pharmacist@123", "John", "Doe", "+1234567891",
                 Set.of(pharmacistRole));
@@ -305,8 +307,8 @@ public class DataLoader implements CommandLineRunner {
 
     private void createUserIfNotFound(String email, String password, String firstName, String lastName, String phone,
             Set<Role> roles) {
-        if (!userRepository.existsByEmail(email)) {
-            User user = new User();
+        User user = userRepository.findByEmail(email).orElseGet(User::new);
+        if (user.getId() == null) {
             user.setEmail(email);
             user.setPassword(passwordEncoder.encode(password));
             user.setFirstName(firstName);
@@ -318,6 +320,11 @@ public class DataLoader implements CommandLineRunner {
             user.setCredentialsNonExpired(true);
             user.setEmailVerified(true);
             user.setRoles(roles);
+            userRepository.save(user);
+        } else if ("admin.medistock@gmail.com".equalsIgnoreCase(email) || "admin@medistock.com".equalsIgnoreCase(email)) {
+            user.setPassword(passwordEncoder.encode(password));
+            user.setRoles(roles);
+            user.setEnabled(true);
             userRepository.save(user);
         }
     }
