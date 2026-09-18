@@ -2,6 +2,10 @@
 
 > **Infosys Springboard Mentorship Project**
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-medi--stock--eight.vercel.app-blue?style=for-the-badge&logo=vercel)](https://medi-stock-eight.vercel.app)
+
+🔗 **Live Application URL:** [https://medi-stock-eight.vercel.app](https://medi-stock-eight.vercel.app)
+
 MediStock is an enterprise-grade, full-stack **Medical Inventory Management Platform** designed for pharmacies, clinics, and hospital networks. It provides real-time stock tracking, FEFO dispatch recommendations, automated reorder and expiration alerts, Razorpay payment gateway integration, role-based access control (RBAC), multi-batch inventory management, and transaction audit trails.
 
 ---
@@ -90,10 +94,12 @@ medical_inventory/
 
 ---
 
-## 🚀 Getting Started / Local Installation Guide
+## 🚀 Getting Started & Setup Guide
 
 ### Prerequisites
 
+Make sure you have the following installed on your local machine:
+- **Git**
 - **Java JDK 17+**
 - **Node.js (v18+) & npm**
 - **MySQL Server 8.0+**
@@ -102,8 +108,13 @@ medical_inventory/
 
 ### Step 1: Clone the Repository
 
+Clone the project repository to your local machine:
+
 ```bash
+# Clone via HTTPS
 git clone https://github.com/UpputuriAnil/MediStock.git
+
+# Navigate into the project root directory
 cd MediStock
 ```
 
@@ -111,7 +122,7 @@ cd MediStock
 
 ### Step 2: Database Setup
 
-Ensure MySQL Server is running locally. Execute the SQL setup script to create the schema and seed initial data:
+Ensure MySQL Server is running. Execute the SQL setup script to create the schema and seed initial data:
 
 ```bash
 mysql -u root -p < mysql_setup.sql
@@ -120,89 +131,37 @@ mysql -u root -p < mysql_setup.sql
 
 ---
 
-### Step 3: Environment Configuration (`.env`)
+### Step 3: Backend Setup (Spring Boot)
 
-Create or verify the `.env` file in the root directory:
-
-```env
-# Database Credentials
-SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/medistock?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-SPRING_DATASOURCE_USERNAME=root
-SPRING_DATASOURCE_PASSWORD=root
-
-# JWT Authentication Secret
-APP_JWT_SECRET=9a2f4c8e7b1d3f5a6c8e9b0d2f4a6c8e1d3f5a7b9c0d2e4f6a8b0c2d4e6f8a0b
-
-# Razorpay Test Gateway Keys
-RAZORPAY_KEY_ID=rzp_test_TWnNPQvPZhc3Y3
-VITE_RAZORPAY_KEY_ID=rzp_test_TWnNPQvPZhc3Y3
-RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_KEY_SECRET
-```
-
----
-
-### Step 4: Backend Setup (Spring Boot)
-
-Navigate to the `backend` folder and run:
+Navigate to the `backend` folder and run the Spring Boot application:
 
 ```bash
 cd backend
 
-# Windows
+# On Windows:
 .\mvnw.cmd clean spring-boot:run
 
-# Linux / macOS
+# On Linux / macOS:
 ./mvnw clean spring-boot:run
 ```
-*Backend REST API will run at `http://localhost:8080` (or `http://localhost:8080/api`).*
-
-To build the executable production JAR:
-```bash
-./mvnw clean package
-```
+*The Backend REST API will start and be accessible at `http://localhost:8080`.*
 
 ---
 
-### Step 5: Frontend Setup (React + Vite)
+### Step 4: Frontend Setup (React + Vite)
 
-In a new terminal window, navigate to the `frontend` folder and run:
+Open a new terminal window, navigate to the `frontend` folder, install dependencies, and start the development server:
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start Vite dev server
 npm run dev
 ```
-*Frontend Application will be accessible at `http://localhost:5173`.*
-
-To build for production:
-```bash
-npm run build
-```
-
----
-
-## ⚙️ Environment Configuration Details
-
-### Backend Configuration (`backend/src/main/resources/application.properties`)
-
-```properties
-# Database Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/medistock?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=root
-
-# JPA / Hibernate Configuration
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-# JWT Security Configuration
-app.jwt.secret=9a2f4c8e7b1d3f5a6c8e9b0d2f4a6c8e1d3f5a7b9c0d2e4f6a8b0c2d4e6f8a0b
-app.jwt.expiration-ms=86400000
-
-# Razorpay Gateway Configuration
-razorpay.key-id=${RAZORPAY_KEY_ID:rzp_test_TWnNPQvPZhc3Y3}
-razorpay.key-secret=${RAZORPAY_KEY_SECRET:YOUR_KEY_SECRET}
-```
+*The Frontend Application will be accessible at `http://localhost:5173`.*
 
 ---
 
@@ -229,29 +188,6 @@ razorpay.key-secret=${RAZORPAY_KEY_SECRET:YOUR_KEY_SECRET}
 
 ---
 
-## 🌐 Free Deployment Guide
-
-### Frontend Deployment (Vercel / Netlify)
-1. Connect Git repository and set root directory to `frontend`.
-2. Framework Preset: **Vite**.
-3. Build Command: `npm run build`
-4. Output Directory: `dist`
-5. Environment Variables:
-   - `VITE_API_BASE_URL=https://your-backend-app.onrender.com/api`
-   - `VITE_RAZORPAY_KEY_ID=rzp_test_TWnNPQvPZhc3Y3`
-
-### Backend Deployment (Render / Railway)
-1. Connect Git repository and set root directory to `backend`.
-2. Build Command: `./mvnw clean package -DskipTests=true`
-3. Start Command: `java -jar target/medistock-0.0.1-SNAPSHOT.jar`
-4. Environment Variables:
-   - `SPRING_DATASOURCE_URL=jdbc:mysql://<your-db-host>:3306/medistock`
-   - `SPRING_DATASOURCE_USERNAME=<db_user>`
-   - `SPRING_DATASOURCE_PASSWORD=<db_password>`
-   - `RAZORPAY_KEY_ID=rzp_test_TWnNPQvPZhc3Y3`
-
----
-
 ## 📅 Development Milestones
 
 - **Milestone 1:** Architecture Design, ER Diagram, Database Scaffolding & Spring Security JWT Auth
@@ -268,3 +204,9 @@ razorpay.key-secret=${RAZORPAY_KEY_SECRET:YOUR_KEY_SECRET}
   - Chandur Supriya
   - CHEKKILI USHA SREE
 - **License:** Educational & Open Source project developed under **Infosys Springboard Mentorship**.
+
+---
+
+## 🔗 Live Demo
+
+Experience the live application here: **[https://medi-stock-eight.vercel.app](https://medi-stock-eight.vercel.app)**
